@@ -217,7 +217,8 @@ def render_markdown(
 
     if inputs.legacy is not None and not inputs.legacy.empty:
         cols = [c for c in ["project", "version", "status", "legacy_rows", "zenodo_rows",
-                            "byte_identical", "differing_rows"] if c in inputs.legacy.columns]  # fmt: skip
+                            "byte_identical", "identical_ignoring_line_endings", "differing_rows"]
+                if c in inputs.legacy.columns]  # fmt: skip
         out += ["## Legacy files vs Zenodo", "", to_markdown(inputs.legacy[cols]), ""]
 
     out += [

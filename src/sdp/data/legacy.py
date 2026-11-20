@@ -35,6 +35,9 @@ def compare_release(legacy_path: Path, zenodo_path: Path) -> dict:
         "zenodo_rows": len(zenodo),
         "same_columns": list(legacy.columns) == list(zenodo.columns),
         "byte_identical": md5_of(legacy_path) == md5_of(zenodo_path),
+        # Zenodo serves CRLF line endings; local copies are often LF.
+        "identical_ignoring_line_endings": legacy_path.read_bytes().replace(b"\r\n", b"\n")
+        == zenodo_path.read_bytes().replace(b"\r\n", b"\n"),
         "differing_rows": None,
         "identical": False,
     }
@@ -71,13 +74,15 @@ def compare_legacy(legacy_dir: Path, raw_dir: Path, project: str) -> pd.DataFram
             row["status"] = "identical" if res["identical"] else "DIFFERENT"
             logger.log(
                 logging.INFO if res["identical"] else logging.WARNING,
-                "Legacy %s %s vs Zenodo: %s (rows %d vs %d, byte-identical=%s, differing rows=%s).",
+                "Legacy %s %s vs Zenodo: %s (rows %d vs %d, byte-identical=%s, "
+                "identical ignoring line endings=%s, differing rows=%s).",
                 project,
                 version,
                 row["status"],
                 res["legacy_rows"],
                 res["zenodo_rows"],
                 res["byte_identical"],
+                res["identical_ignoring_line_endings"],
                 res["differing_rows"],
             )
         records.append(row)
