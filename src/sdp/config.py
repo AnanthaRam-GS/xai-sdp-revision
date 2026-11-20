@@ -19,6 +19,7 @@ class Paths:
     legacy_dir: Path
     reports_dir: Path
     results_dir: Path = REPO_ROOT / "results"
+    artifacts_dir: Path = REPO_ROOT / "artifacts"
 
 
 @dataclass(frozen=True)

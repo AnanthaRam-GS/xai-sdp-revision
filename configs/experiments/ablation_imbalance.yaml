@@ -1,0 +1,10 @@
+name: ablation_imbalance
+description: Class-imbalance ablation (time-aware).
+protocol: time_aware
+time_aware_variant: consecutive
+models:
+  mlp: {preprocessing: [log_standard], imbalance: [none, class_weight, smote]}
+  rf: {preprocessing: [log_standard], imbalance: [none, class_weight, smote]}
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+persist_models: false
+n_jobs: 10

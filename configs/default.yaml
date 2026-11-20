@@ -9,6 +9,7 @@ paths:
   legacy_dir: data/legacy       # optional, local only (not redistributed)
   reports_dir: reports
   results_dir: results           # experiment outputs (git-ignored)
+  artifacts_dir: artifacts       # fitted models for step 4 (git-ignored)
 
 zenodo:
   api_url: https://zenodo.org/api
