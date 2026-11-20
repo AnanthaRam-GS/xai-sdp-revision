@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 from sdp.models.baselines import BASELINES
 from sdp.models.classic import XGBClassifierES, make_lr, make_rf
 from sdp.models.imbalance import model_imbalance
@@ -31,6 +33,15 @@ def make_model(name: str, params: dict | None = None, imbalance: str = "class_we
     if name in BASELINES:
         return BASELINES[name]()
     raise ValueError(f"unknown model {name!r}; choose from {ALL_MODELS}")
+
+
+def positive_proba(model, X) -> np.ndarray:
+    """Probability of the defective class, also when the model saw only one class."""
+    proba = model.predict_proba(X)
+    classes = list(model.classes_)
+    if 1 in classes:
+        return np.asarray(proba[:, classes.index(1)], dtype="float64")
+    return np.zeros(len(X))
 
 
 def requires_raw_features(model) -> bool:

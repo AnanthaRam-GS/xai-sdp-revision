@@ -1,8 +1,8 @@
-"""Explainable software defect prediction: experimental pipeline."""
+"""Explainable software defect prediction: experimental pipeline.
 
-# XGBoost and PyTorch each ship their own OpenMP runtime (libomp). On macOS, loading
-# PyTorch's first makes XGBoost crash with a segmentation fault, so XGBoost is always
-# imported first, before anything in this package can import torch.
-import xgboost  # noqa: F401  (import order matters; see above)
+On macOS, call :func:`sdp.runtime.ensure_single_openmp_runtime` before importing
+PyTorch, XGBoost or scikit-learn in a new process (the entry points in ``scripts/``
+and the test suite do this); see :mod:`sdp.runtime`.
+"""
 
 __version__ = "0.3.0"
