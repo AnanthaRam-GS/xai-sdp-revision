@@ -155,6 +155,8 @@ def to_markdown(df: pd.DataFrame) -> str:
         return "_(none)_"
 
     def fmt(v) -> str:
+        if v is None or v is pd.NA:
+            return ""
         if isinstance(v, float):
             return "" if pd.isna(v) else f"{v:.2f}"
         return str(v)
