@@ -2,7 +2,7 @@
 
 Experimental pipeline for the revision of a research paper on explainable software defect prediction (Journal of Systems and Software).
 
-This repository is built in steps. **Step 1** (this stage) covers project set-up and the data pipeline: acquisition, cleaning and auditing. No models or explainers are included yet.
+This repository is built in steps. **Step 1** covers the data pipeline (acquisition, cleaning, auditing); **step 2** finalises the study dataset and adds the evaluation framework (preprocessing, split protocols, metrics, statistics, experiment runner), tested with trivial baselines only. No learning models or explainers are included yet.
 
 ## Setup
 
@@ -42,7 +42,7 @@ The Jureczko CK-metric defect datasets (Jureczko & Madeyski, 2010), from the SEA
 
 | Project | Zenodo record | DOI | Releases on Zenodo |
 |---|---|---|---|
-| ant | 268440 | [10.5281/zenodo.268440](https://doi.org/10.5281/zenodo.268440) | 1.7 |
+| ant | 268440 | [10.5281/zenodo.268440](https://doi.org/10.5281/zenodo.268440) | 1.7 (1.3–1.6: see below) |
 | camel | 268442 | [10.5281/zenodo.268442](https://doi.org/10.5281/zenodo.268442) | 1.0, 1.2, 1.4, 1.6 |
 | ivy | 322436 | [10.5281/zenodo.322436](https://doi.org/10.5281/zenodo.322436) | 1.1, 1.4, 2.0 |
 | jedit | 268458 | [10.5281/zenodo.268458](https://doi.org/10.5281/zenodo.268458) | 3.2, 4.0, 4.1, 4.2, 4.3 |
@@ -54,7 +54,7 @@ The Jureczko CK-metric defect datasets (Jureczko & Madeyski, 2010), from the SEA
 | xalan | 268436 | [10.5281/zenodo.268436](https://doi.org/10.5281/zenodo.268436) | 2.4, 2.5, 2.6, 2.7 |
 | xerces | 268474 | [10.5281/zenodo.268474](https://doi.org/10.5281/zenodo.268474) | init, 1.2, 1.3, 1.4 |
 
-**Known gap:** the ANT record contains only release 1.7. ANT 1.3–1.6 are not on Zenodo.
+**ANT 1.3–1.6** are not on Zenodo (the ANT record contains only 1.7). They are taken from the GitHub mirror of the PROMISE repository, [hjx-zhans/promise-backup](https://github.com/hjx-zhans/promise-backup), at the pinned commit `1e8fd48cbd5275dd57409f3917de4c8ae9e15add`, directory `bug-data/ant/`. File paths are resolved from the repository tree at that commit, and each file is verified against its git blob SHA-1. `MANIFEST.csv` records `source = github-mirror`, the repository URL, commit SHA, file path, md5 and retrieval date (Zenodo fields empty). To show the mirror is faithful, the pipeline also downloads the mirror's ANT 1.7 and compares it row by row with Zenodo's, and compares mirror ANT 1.3–1.6 with locally held legacy copies. It stops without substituting anything if any comparison differs; all were identical (`reports/mirror_verification.csv`). The mirror files have a different layout (a single `name` column holding the class name, no project/version columns); they are stored byte-for-byte and handled by the cleaner.
 
 Notes:
 - A second, single-release record for camel 1.0 exists (268429); its file is byte-identical to the one in 268442.
@@ -80,7 +80,42 @@ No scaling, normalisation or feature selection is done here. These happen inside
 
 ## Audit (`src/sdp/data/audit.py`)
 
-`reports/data_audit.md` reports, for each release, the raw rows, invalid rows, inconsistent and duplicate rows removed, final rows, defective count and ratio, and mean/median LOC. For each pair of consecutive releases it reports the classes shared by name and the rows of release n+1 that are unchanged carry-overs (identical metrics **and** label to some row of release n). It flags releases with a defective ratio below 5% or above 75%, projects with fewer than 3 usable releases, and consecutive releases with no class names in common. Nothing is excluded at this stage.
+`reports/data_audit.md` reports, for each release, the raw rows, invalid rows, inconsistent and duplicate rows removed, final rows, defective count and ratio, and mean/median LOC. For each pair of consecutive releases it reports the classes shared by name and the rows of release n+1 that are unchanged carry-overs (identical metrics **and** label to some row of release n). It flags releases with a defective ratio below 5% or above 75%, projects with fewer than 3 usable releases, and consecutive releases with no class names in common. Nothing is excluded by the audit itself; exclusion happens in the study inclusion rule below.
+
+## Step 2: evaluation framework
+
+### Study dataset (`src/sdp/data/study.py`)
+
+Releases whose defective ratio after cleaning is < 5% or > 75% are excluded; then a project is kept only if at least 3 releases remain (thresholds in `configs/default.yaml`, section `study`). Releases follow the chronological order listed explicitly under `projects` in the configuration (never string order). Result: 10 projects, 34 releases, 24 time-aware pairs (log4j excluded); see `reports/study_dataset.md`.
+
+### Protocols (`src/sdp/eval/splits.py`, `src/sdp/eval/preprocess.py`)
+
+- **time_aware**: train on release n, test on release n+1 of the same project (`consecutive`), or train on all included releases <= n (`cumulative`); set `evaluation.time_aware_variant`.
+- **within_release**: 10 x 5-fold repeated stratified cross-validation per release (seed 42).
+- Inside every training set a stratified, seeded 20% **validation** hold-out is used for threshold tuning (and later early stopping and calibration checks). Models are fitted on the remaining 80% and are not refitted. The test set is never used for fitting or tuning.
+- Every split has a stable `split_id` (e.g. `ta-consecutive:ant:1.3>1.4`, `wr:ant:1.3:r01f2`).
+- Features are the 20 metrics only (`class_name`, `bug_count`, `defective` never). Preprocessing (`none`, `standard`, `log_standard`) sits inside the model pipeline, so it is fitted on training data only. Original LOC is kept separately as the effort measure.
+
+### Metrics (`src/sdp/eval/metrics.py`)
+
+- Threshold-independent: ROC-AUC, PR-AUC (average precision).
+- Threshold-dependent, at 0.5 and at the MCC-maximising validation threshold: precision, recall, F1, MCC, balanced accuracy, G-mean, false alarm rate, NECM15 = (FP + 15 FN) / N (Herbold, 2018).
+- Calibration: Brier score, NLL (clipped log loss), ECE (10 equal-width bins).
+- Effort-aware (LOC as effort, ranking by predicted risk density = probability / LOC): Popt (Mende & Koschke, 2010), Recall@20%LOC, IFA.
+- Degenerate cases (single class, no positive predictions, zero effort) return NaN with a warning.
+
+### Statistics (`src/sdp/eval/stats.py`)
+
+Bootstrap 95% CIs of means (2,000 resamples, seeded); Wilcoxon signed-rank tests paired by split with Holm correction; Cliff's delta with Romano et al. magnitudes; Scott-Knott ESD (implemented here, as no maintained Python package exists; log1p transform for non-negative data, merging of adjacent groups with negligible Cohen's d).
+
+### Running the baselines
+
+```bash
+python -m scripts.prepare_data        # data, audit and study dataset
+python -m scripts.run_baselines       # all_defective, loc_ranking, majority
+```
+
+Per-experiment outputs go to `results/<experiment>/metrics.csv` (long format) and `predictions.csv` (per test instance; git-ignored). The summary with means and 95% CIs per project and baseline is `reports/baselines_summary.md`.
 
 ## Layout
 
@@ -92,11 +127,20 @@ src/sdp/data/download.py   Zenodo search, download, md5 verification, MANIFEST
 src/sdp/data/legacy.py     comparison of local legacy files with Zenodo
 src/sdp/data/clean.py      per-release cleaning
 src/sdp/data/audit.py      audit tables and report
-scripts/prepare_data.py    step 1 entry point
+src/sdp/data/study.py      study inclusion rule and release pairs
+src/sdp/eval/              preprocessing, splits, metrics, statistics
+src/sdp/experiments/       runner, trivial baselines, summary reports
+scripts/prepare_data.py    data preparation entry point
+scripts/run_baselines.py   baseline experiments entry point
 tests/                     pytest suite
 ```
 
 ## References
 
 - Jureczko, M., & Madeyski, L. (2010). Towards identifying software project clusters with regard to defect prediction. *PROMISE '10*.
+- Herbold, S. (2018). Benchmarking cross-project defect prediction approaches with costs metrics. arXiv:1801.04107.
+- Mende, T., & Koschke, R. (2010). Effort-aware defect prediction models. *CSMR 2010*, 107–116.
+- Romano, J., Kromrey, J. D., Coraggio, J., & Skowronek, J. (2006). Appropriate statistics for ordinal level data. *Florida Association of Institutional Research*.
+- Scott, A. J., & Knott, M. (1974). A cluster analysis method for grouping means in the analysis of variance. *Biometrics*, 30(3), 507–512.
 - Sun, Z., Li, J., Sun, H., & He, L. (2018). An empirical study of public data quality problems in cross project defect prediction. arXiv:1805.10787.
+- Tantithamthavorn, C., McIntosh, S., Hassan, A. E., & Matsumoto, K. (2017). An empirical comparison of model validation techniques for defect prediction models. *IEEE TSE*, 43(1), 1–18.
