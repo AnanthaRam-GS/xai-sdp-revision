@@ -147,7 +147,7 @@ def clean_release(raw: pd.DataFrame, label: str = "") -> tuple[pd.DataFrame, Cle
 
     stats = CleaningStats(raw_rows, n_invalid, n_incons, n_groups, n_dup, len(df))
     logger.info(
-        "%s: raw=%d, invalid=%d, inconsistent removed=%d (%d groups), duplicates removed=%d, final=%d.",
+        "%s: raw=%d, invalid=%d, inconsistent removed=%d (%d group(s)), duplicates removed=%d, final=%d.",
         label, raw_rows, n_invalid, n_incons, n_groups, n_dup, len(df),
     )  # fmt: skip
     dupe_ids = int(df[ID_COL].duplicated().sum())
