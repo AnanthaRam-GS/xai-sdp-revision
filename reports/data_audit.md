@@ -1,6 +1,6 @@
 # Data audit
 
-Generated 2026-11-20 16:55 UTC by `python -m scripts.prepare_data`.
+Generated 2026-11-20 16:57 UTC by `python -m scripts.prepare_data`.
 
 Source: Jureczko CK-metric datasets (SEACRAFT / tera-PROMISE) on Zenodo. Cleaning was applied to each release separately: invalid rows dropped, then inconsistent groups removed, then duplicates removed (Sun et al., 2018).
 
@@ -32,7 +32,7 @@ Source: Jureczko CK-metric datasets (SEACRAFT / tera-PROMISE) on Zenodo. Cleanin
 | ant | 1.4 | no Zenodo counterpart |  |  |  |  |  |
 | ant | 1.5 | no Zenodo counterpart |  |  |  |  |  |
 | ant | 1.6 | no Zenodo counterpart |  |  |  |  |  |
-| ant | 1.7 | identical | 745.00 | 745.00 | False | True | 0.00 |
+| ant | 1.7 | identical | 745 | 745 | False | True | 0 |
 
 ## Per-release summary
 
