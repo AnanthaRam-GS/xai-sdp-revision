@@ -156,7 +156,7 @@ def to_markdown(df: pd.DataFrame) -> str:
 
     def fmt(v) -> str:
         if isinstance(v, float):
-            return "" if pd.isna(v) else f"{v:g}" if v == int(v) and abs(v) < 1e15 else f"{v:.2f}"
+            return "" if pd.isna(v) else f"{v:.2f}"
         return str(v)
 
     header = "| " + " | ".join(map(str, df.columns)) + " |"
@@ -252,7 +252,18 @@ def render_markdown(
         out += [f"- **{p}**: {n} usable release(s)" for p, n in thin.items()]
     else:
         out.append("_(none)_")
-    out.append("")
+
+    disjoint = overlap.loc[overlap["shared_classes"] == 0, ["project", "release_n", "release_n1"]]
+    out += [
+        "",
+        "### Consecutive releases with no class names in common",
+        "",
+        "Class tracking by `class_name` is impossible across these pairs (for example "
+        "after a package rename).",
+        "",
+        to_markdown(disjoint),
+        "",
+    ]
     return "\n".join(out)
 
 
