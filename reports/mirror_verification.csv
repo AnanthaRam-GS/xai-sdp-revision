@@ -1,0 +1,6 @@
+project,version,comparison,mirror_path,rows_a,rows_b,same_columns,byte_identical,identical_ignoring_line_endings,differing_rows,identical
+ant,1.7,mirror vs Zenodo,bug-data/ant/ant-1.7.csv,745,745,True,False,False,0,True
+ant,1.3,mirror vs legacy,bug-data/ant/ant-1.3.csv,125,125,True,False,False,0,True
+ant,1.4,mirror vs legacy,bug-data/ant/ant-1.4.csv,178,178,True,False,False,0,True
+ant,1.5,mirror vs legacy,bug-data/ant/ant-1.5.csv,293,293,True,False,False,0,True
+ant,1.6,mirror vs legacy,bug-data/ant/ant-1.6.csv,351,351,True,False,False,0,True

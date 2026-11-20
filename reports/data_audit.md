@@ -1,43 +1,60 @@
 # Data audit
 
-Generated 2026-11-20 16:57 UTC by `python -m scripts.prepare_data`.
+Generated 2026-11-20 17:26 UTC by `python -m scripts.prepare_data`.
 
 Source: Jureczko CK-metric datasets (SEACRAFT / tera-PROMISE) on Zenodo. Cleaning was applied to each release separately: invalid rows dropped, then inconsistent groups removed, then duplicates removed (Sun et al., 2018).
 
 ## Data sources
 
-| project | zenodo_record_id | doi | releases |
+| project | source | reference | releases |
 |---|---|---|---|
-| ant | 268440 | [10.5281/zenodo.268440](https://doi.org/10.5281/zenodo.268440) | 1.7 |
-| camel | 268442 | [10.5281/zenodo.268442](https://doi.org/10.5281/zenodo.268442) | 1.0, 1.2, 1.4, 1.6 |
-| ivy | 322436 | [10.5281/zenodo.322436](https://doi.org/10.5281/zenodo.322436) | 1.1, 1.4, 2.0 |
-| jedit | 268458 | [10.5281/zenodo.268458](https://doi.org/10.5281/zenodo.268458) | 3.2, 4.0, 4.1, 4.2, 4.3 |
-| log4j | 268451 | [10.5281/zenodo.268451](https://doi.org/10.5281/zenodo.268451) | 1.0, 1.1, 1.2 |
-| lucene | 322458 | [10.5281/zenodo.322458](https://doi.org/10.5281/zenodo.322458) | 2.0, 2.2, 2.4 |
-| poi | 322443 | [10.5281/zenodo.322443](https://doi.org/10.5281/zenodo.322443) | 1.5, 2.0, 2.5, 3.0 |
-| synapse | 322449 | [10.5281/zenodo.322449](https://doi.org/10.5281/zenodo.322449) | 1.0, 1.1, 1.2 |
-| velocity | 322455 | [10.5281/zenodo.322455](https://doi.org/10.5281/zenodo.322455) | 1.4, 1.5, 1.6 |
-| xalan | 268436 | [10.5281/zenodo.268436](https://doi.org/10.5281/zenodo.268436) | 2.4, 2.5, 2.6, 2.7 |
-| xerces | 268474 | [10.5281/zenodo.268474](https://doi.org/10.5281/zenodo.268474) | init, 1.2, 1.3, 1.4 |
+| ant | github-mirror | [hjx-zhans/promise-backup](https://github.com/hjx-zhans/promise-backup) @ `1e8fd48`, `bug-data/ant/` | 1.3, 1.4, 1.5, 1.6 |
+| ant | zenodo | Zenodo record 268440, DOI [10.5281/zenodo.268440](https://doi.org/10.5281/zenodo.268440) | 1.7 |
+| camel | zenodo | Zenodo record 268442, DOI [10.5281/zenodo.268442](https://doi.org/10.5281/zenodo.268442) | 1.0, 1.2, 1.4, 1.6 |
+| ivy | zenodo | Zenodo record 322436, DOI [10.5281/zenodo.322436](https://doi.org/10.5281/zenodo.322436) | 1.1, 1.4, 2.0 |
+| jedit | zenodo | Zenodo record 268458, DOI [10.5281/zenodo.268458](https://doi.org/10.5281/zenodo.268458) | 3.2, 4.0, 4.1, 4.2, 4.3 |
+| log4j | zenodo | Zenodo record 268451, DOI [10.5281/zenodo.268451](https://doi.org/10.5281/zenodo.268451) | 1.0, 1.1, 1.2 |
+| lucene | zenodo | Zenodo record 322458, DOI [10.5281/zenodo.322458](https://doi.org/10.5281/zenodo.322458) | 2.0, 2.2, 2.4 |
+| poi | zenodo | Zenodo record 322443, DOI [10.5281/zenodo.322443](https://doi.org/10.5281/zenodo.322443) | 1.5, 2.0, 2.5, 3.0 |
+| synapse | zenodo | Zenodo record 322449, DOI [10.5281/zenodo.322449](https://doi.org/10.5281/zenodo.322449) | 1.0, 1.1, 1.2 |
+| velocity | zenodo | Zenodo record 322455, DOI [10.5281/zenodo.322455](https://doi.org/10.5281/zenodo.322455) | 1.4, 1.5, 1.6 |
+| xalan | zenodo | Zenodo record 268436, DOI [10.5281/zenodo.268436](https://doi.org/10.5281/zenodo.268436) | 2.4, 2.5, 2.6, 2.7 |
+| xerces | zenodo | Zenodo record 268474, DOI [10.5281/zenodo.268474](https://doi.org/10.5281/zenodo.268474) | init, 1.2, 1.3, 1.4 |
 
 ## Differences from the expected release list
 
-- **ant**: expected but **not available on Zenodo**: 1.3, 1.4, 1.5, 1.6
+All expected releases were found on Zenodo, and no others.
 
-## Legacy files vs Zenodo
+## GitHub mirror verification
 
-| project | version | status | legacy_rows | zenodo_rows | byte_identical | identical_ignoring_line_endings | differing_rows |
+Row-level comparison after sorting by class name (`rows_a` = mirror). The mirror is used only if every comparison is identical.
+
+| project | version | comparison | mirror_path | rows_a | rows_b | byte_identical | identical_ignoring_line_endings | differing_rows | identical |
+|---|---|---|---|---|---|---|---|---|---|
+| ant | 1.7 | mirror vs Zenodo | bug-data/ant/ant-1.7.csv | 745 | 745 | False | False | 0 | True |
+| ant | 1.3 | mirror vs legacy | bug-data/ant/ant-1.3.csv | 125 | 125 | False | False | 0 | True |
+| ant | 1.4 | mirror vs legacy | bug-data/ant/ant-1.4.csv | 178 | 178 | False | False | 0 | True |
+| ant | 1.5 | mirror vs legacy | bug-data/ant/ant-1.5.csv | 293 | 293 | False | False | 0 | True |
+| ant | 1.6 | mirror vs legacy | bug-data/ant/ant-1.6.csv | 351 | 351 | False | False | 0 | True |
+
+## Legacy files vs data/raw
+
+| project | version | status | legacy_rows | raw_rows | byte_identical | identical_ignoring_line_endings | differing_rows |
 |---|---|---|---|---|---|---|---|
-| ant | 1.3 | no Zenodo counterpart |  |  |  |  |  |
-| ant | 1.4 | no Zenodo counterpart |  |  |  |  |  |
-| ant | 1.5 | no Zenodo counterpart |  |  |  |  |  |
-| ant | 1.6 | no Zenodo counterpart |  |  |  |  |  |
+| ant | 1.3 | identical | 125 | 125 | False | False | 0 |
+| ant | 1.4 | identical | 178 | 178 | False | False | 0 |
+| ant | 1.5 | identical | 293 | 293 | False | False | 0 |
+| ant | 1.6 | identical | 351 | 351 | False | False | 0 |
 | ant | 1.7 | identical | 745 | 745 | False | True | 0 |
 
 ## Per-release summary
 
 | project | version | raw_rows | invalid_rows | inconsistent_rows_removed | duplicate_rows_removed | final_rows | defective_count | defective_ratio_pct | mean_loc | median_loc |
 |---|---|---|---|---|---|---|---|---|---|---|
+| ant | 1.3 | 125 | 0 | 0 | 0 | 125 | 20 | 16.00 | 301.60 | 168.00 |
+| ant | 1.4 | 178 | 0 | 2 | 1 | 175 | 38 | 21.71 | 309.50 | 153.00 |
+| ant | 1.5 | 293 | 0 | 0 | 3 | 290 | 32 | 11.03 | 299.90 | 145.00 |
+| ant | 1.6 | 351 | 0 | 0 | 4 | 347 | 92 | 26.51 | 326.10 | 158.00 |
 | ant | 1.7 | 745 | 0 | 0 | 21 | 724 | 166 | 22.93 | 287.30 | 148.00 |
 | camel | 1.0 | 339 | 0 | 0 | 12 | 327 | 13 | 3.98 | 102.80 | 65.00 |
 | camel | 1.2 | 608 | 0 | 21 | 29 | 558 | 205 | 36.74 | 118.00 | 66.50 |
@@ -76,7 +93,7 @@ Source: Jureczko CK-metric datasets (SEACRAFT / tera-PROMISE) on Zenodo. Cleanin
 | xerces | 1.3 | 453 | 0 | 2 | 89 | 362 | 68 | 18.78 | 458.50 | 81.50 |
 | xerces | 1.4 | 588 | 0 | 7 | 95 | 486 | 376 | 77.37 | 287.30 | 67.00 |
 
-Totals: 14828 raw rows; 0 invalid, 185 inconsistent and 1072 duplicate rows removed; 13571 rows remain, of which 5040 are defective.
+Totals: 15775 raw rows; 0 invalid, 187 inconsistent and 1080 duplicate rows removed; 14508 rows remain, of which 5222 are defective.
 
 ## Overlap between consecutive releases
 
@@ -84,6 +101,10 @@ Totals: 14828 raw rows; 0 invalid, 185 inconsistent and 1072 duplicate rows remo
 
 | project | release_n | release_n1 | classes_n | classes_n1 | shared_classes | shared_pct_of_n | shared_pct_of_n1 | rows_n1 | unchanged_rows | unchanged_pct_of_n1 |
 |---|---|---|---|---|---|---|---|---|---|---|
+| ant | 1.3 | 1.4 | 125 | 175 | 125 | 100.00 | 71.43 | 175 | 32 | 18.29 |
+| ant | 1.4 | 1.5 | 175 | 290 | 163 | 93.14 | 56.21 | 290 | 23 | 7.93 |
+| ant | 1.5 | 1.6 | 290 | 347 | 288 | 99.31 | 83.00 | 347 | 61 | 17.58 |
+| ant | 1.6 | 1.7 | 347 | 724 | 344 | 99.14 | 47.51 | 724 | 45 | 6.22 |
 | camel | 1.0 | 1.2 | 327 | 558 | 247 | 75.54 | 44.27 | 558 | 58 | 10.39 |
 | camel | 1.2 | 1.4 | 558 | 802 | 508 | 91.04 | 63.34 | 802 | 123 | 15.34 |
 | camel | 1.4 | 1.6 | 802 | 878 | 762 | 95.01 | 86.79 | 878 | 255 | 29.04 |
@@ -125,7 +146,7 @@ Totals: 14828 raw rows; 0 invalid, 185 inconsistent and 1072 duplicate rows remo
 
 ### Projects with fewer than 3 usable releases
 
-- **ant**: 1 usable release(s)
+_(none)_
 
 ### Consecutive releases with no class names in common
 
