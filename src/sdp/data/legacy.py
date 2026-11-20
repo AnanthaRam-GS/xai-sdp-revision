@@ -86,4 +86,9 @@ def compare_legacy(legacy_dir: Path, raw_dir: Path, project: str) -> pd.DataFram
                 res["differing_rows"],
             )
         records.append(row)
-    return pd.DataFrame(records)
+    out = pd.DataFrame(records)
+    # Keep counts as integers even when some releases have no counterpart (missing values).
+    for col in ("legacy_rows", "zenodo_rows", "differing_rows"):
+        if col in out.columns:
+            out[col] = out[col].astype("Int64")
+    return out
