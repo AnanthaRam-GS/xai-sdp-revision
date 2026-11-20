@@ -57,3 +57,22 @@ study:
   min_defective_ratio: 0.05
   max_defective_ratio: 0.75
   min_releases: 3
+
+# Evaluation framework (step 2).
+evaluation:
+  # Time-aware protocol: "consecutive" (train = release n) or "cumulative"
+  # (train = all included releases <= n); the test set is always release n+1.
+  time_aware_variant: consecutive
+  within_release:
+    n_splits: 5
+    n_repeats: 10
+  # Stratified hold-out inside every training set (early stopping, threshold
+  # tuning, calibration checks). The test set is never used for fitting or tuning.
+  validation_size: 0.2
+  preprocessing: standard        # none | standard | log_standard
+  effort:
+    recall_at_loc: 0.20          # Recall@20%LOC
+    necm_cost_ratio: 15          # NECM_15
+  bootstrap:
+    n_resamples: 2000
+    confidence: 0.95

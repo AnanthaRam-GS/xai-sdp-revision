@@ -51,6 +51,25 @@ class StudySettings:
 
 
 @dataclass(frozen=True)
+class EvaluationSettings:
+    time_aware_variant: str = "consecutive"
+    n_splits: int = 5
+    n_repeats: int = 10
+    validation_size: float = 0.2
+    preprocessing: str = "standard"
+    recall_at_loc: float = 0.2
+    necm_cost_ratio: float = 15.0
+    n_resamples: int = 2000
+    confidence: float = 0.95
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "EvaluationSettings":
+        wr, eff, bs = d.get("within_release", {}), d.get("effort", {}), d.get("bootstrap", {})
+        flat = {k: v for k, v in d.items() if k not in ("within_release", "effort", "bootstrap")}
+        return cls(**flat, **wr, **eff, **bs)
+
+
+@dataclass(frozen=True)
 class Config:
     seed: int
     paths: Paths
@@ -58,6 +77,7 @@ class Config:
     projects: dict[str, list[str]]
     study: StudySettings = field(default_factory=StudySettings)
     github_mirror: MirrorSettings | None = None
+    evaluation: EvaluationSettings = field(default_factory=EvaluationSettings)
 
     def release_order(self, project: str, versions: list[str] | None = None) -> list[str]:
         """Return ``versions`` (default: all configured) in the configured chronological order.
@@ -112,4 +132,5 @@ def load_config(path: str | Path = DEFAULT_CONFIG, root: Path = REPO_ROOT) -> Co
         projects=projects,
         study=StudySettings(**raw.get("study", {})),
         github_mirror=mirror,
+        evaluation=EvaluationSettings.from_dict(raw.get("evaluation", {})),
     )
