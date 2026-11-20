@@ -1,6 +1,6 @@
-project,version,legacy_file,status,identical,legacy_rows,zenodo_rows,same_columns,byte_identical,identical_ignoring_line_endings,differing_rows
-ant,1.3,ant-1.3.csv,no Zenodo counterpart,,,,,,,
-ant,1.4,ant-1.4.csv,no Zenodo counterpart,,,,,,,
-ant,1.5,ant-1.5.csv,no Zenodo counterpart,,,,,,,
-ant,1.6,ant-1.6.csv,no Zenodo counterpart,,,,,,,
-ant,1.7,ant-1.7.csv,identical,True,745,745,True,False,True,0
+project,version,legacy_file,legacy_rows,raw_rows,byte_identical,identical_ignoring_line_endings,differing_rows,identical,status
+ant,1.3,ant-1.3.csv,125,125,False,False,0,True,identical
+ant,1.4,ant-1.4.csv,178,178,False,False,0,True,identical
+ant,1.5,ant-1.5.csv,293,293,False,False,0,True,identical
+ant,1.6,ant-1.6.csv,351,351,False,False,0,True,identical
+ant,1.7,ant-1.7.csv,745,745,False,True,0,True,identical

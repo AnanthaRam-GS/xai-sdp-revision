@@ -71,6 +71,9 @@ def standardise_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Lower-case column names, apply the canonical renames and check the metrics."""
     out = df.copy()
     out.columns = [str(c).strip().lower() for c in out.columns]
+    if "name.1" not in out.columns and "name" in out.columns:
+        # GitHub-mirror layout: a single 'name' column holds the class name.
+        out = out.rename(columns={"name": ID_COL})
     out = out.rename(columns=_RENAMES)
 
     required = [*METRICS, COUNT_COL, ID_COL]

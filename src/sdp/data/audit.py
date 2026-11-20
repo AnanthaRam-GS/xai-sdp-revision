@@ -60,6 +60,7 @@ class AuditInputs:
     missing_releases: dict[str, list[str]] = field(default_factory=dict)
     unexpected_releases: dict[str, list[str]] = field(default_factory=dict)
     legacy: pd.DataFrame | None = None
+    mirror_verification: pd.DataFrame | None = None
 
 
 # ------------------------------------------------------------------------ tables
@@ -119,14 +120,17 @@ def pair_overlap(prev: pd.DataFrame, nxt: pd.DataFrame) -> dict:
     }
 
 
-def release_overlap(releases: dict[tuple[str, str], pd.DataFrame]) -> pd.DataFrame:
+def release_overlap(
+    releases: dict[tuple[str, str], pd.DataFrame], cfg: Config | None = None
+) -> pd.DataFrame:
+    """Overlap for each pair of consecutive releases (chronological order from ``cfg``)."""
     by_project: dict[str, list[str]] = {}
     for project, version in releases:
         by_project.setdefault(project, []).append(version)
 
     rows = []
     for project, versions in by_project.items():
-        versions = sorted(versions, key=version_sort_key)
+        versions = cfg.release_order(project, versions) if cfg else sorted(versions, key=version_sort_key)
         for a, b in zip(versions, versions[1:]):
             rows.append(
                 {"project": project, "release_n": a, "release_n1": b}
@@ -173,22 +177,28 @@ def render_markdown(
     summary: pd.DataFrame,
     overlap: pd.DataFrame,
 ) -> str:
-    a = cfg.audit
+    a = cfg.study
     lo, hi = 100 * a.min_defective_ratio, 100 * a.max_defective_ratio
     flagged = flag_releases(summary, lo, hi)
     thin = flag_projects(summary, list(cfg.projects), a.min_releases)
 
-    m = inputs.manifest
+    m = inputs.manifest.fillna("")
+    if "source" not in m.columns:
+        m = m.assign(source="zenodo", repository_url="", commit_sha="", file_path="")
+
+    def reference(r) -> str:
+        if r["source"] == "zenodo":
+            return f"Zenodo record {r['zenodo_record_id']}, DOI [{r['doi']}](https://doi.org/{r['doi']})"
+        folder = str(r["file_path"]).rsplit("/", 1)[0]
+        return f"[{r['repository_url'].removeprefix('https://github.com/')}]({r['repository_url']}) @ `{str(r['commit_sha'])[:7]}`, `{folder}/`"
+
+    m = m.assign(reference=m.apply(reference, axis=1))
     sources = (
-        m.groupby("project", sort=False)
-        .agg(
-            zenodo_record_id=("zenodo_record_id", "first"),
-            doi=("doi", "first"),
-            releases=("version", lambda s: ", ".join(sorted(map(str, s), key=version_sort_key))),
-        )
+        m.groupby(["project", "source", "reference"], sort=False)["version"]
+        .agg(lambda s: ", ".join(sorted(map(str, s), key=version_sort_key)))
         .reset_index()
+        .rename(columns={"version": "releases"})
     )
-    sources["doi"] = sources["doi"].map(lambda d: f"[{d}](https://doi.org/{d})")
 
     totals = summary[["raw_rows", "invalid_rows", "inconsistent_rows_removed", "duplicate_rows_removed",
                       "final_rows", "defective_count"]].sum()  # fmt: skip
@@ -217,11 +227,26 @@ def render_markdown(
         out.append(f"- **{p}**: on Zenodo but not in the expected list: {', '.join(vs)}")
     out.append("")
 
+    mv = inputs.mirror_verification
+    if mv is not None and not mv.empty:
+        cols = [c for c in ["project", "version", "comparison", "mirror_path", "rows_a", "rows_b",
+                            "byte_identical", "identical_ignoring_line_endings", "differing_rows", "identical"]
+                if c in mv.columns]  # fmt: skip
+        out += [
+            "## GitHub mirror verification",
+            "",
+            "Row-level comparison after sorting by class name (`rows_a` = mirror). The mirror "
+            "is used only if every comparison is identical.",
+            "",
+            to_markdown(mv[cols]),
+            "",
+        ]
+
     if inputs.legacy is not None and not inputs.legacy.empty:
-        cols = [c for c in ["project", "version", "status", "legacy_rows", "zenodo_rows",
+        cols = [c for c in ["project", "version", "status", "legacy_rows", "raw_rows",
                             "byte_identical", "identical_ignoring_line_endings", "differing_rows"]
                 if c in inputs.legacy.columns]  # fmt: skip
-        out += ["## Legacy files vs Zenodo", "", to_markdown(inputs.legacy[cols]), ""]
+        out += ["## Legacy files vs data/raw", "", to_markdown(inputs.legacy[cols]), ""]
 
     out += [
         "## Per-release summary",
@@ -284,7 +309,7 @@ def run_audit(cfg: Config, inputs: AuditInputs) -> tuple[pd.DataFrame, pd.DataFr
     """Compute and write the audit tables and the Markdown report."""
     releases = load_processed(cfg, inputs.manifest)
     summary = release_summary(releases, inputs.stats)
-    overlap = release_overlap(releases)
+    overlap = release_overlap(releases, cfg)
 
     reports: Path = cfg.paths.reports_dir
     reports.mkdir(parents=True, exist_ok=True)
@@ -292,6 +317,8 @@ def run_audit(cfg: Config, inputs: AuditInputs) -> tuple[pd.DataFrame, pd.DataFr
     overlap.to_csv(reports / "release_overlap.csv", index=False)
     if inputs.legacy is not None and not inputs.legacy.empty:
         inputs.legacy.to_csv(reports / "legacy_comparison.csv", index=False)
+    if inputs.mirror_verification is not None and not inputs.mirror_verification.empty:
+        inputs.mirror_verification.to_csv(reports / "mirror_verification.csv", index=False)
     (reports / "data_audit.md").write_text(render_markdown(cfg, inputs, summary, overlap), encoding="utf-8")
     logger.info("Wrote data audit to %s.", reports)
     return summary, overlap
