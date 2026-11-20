@@ -1,0 +1,3 @@
+# Raw Zenodo CSVs use CRLF line endings. Store them byte-for-byte so that their md5
+# checksums keep matching those published by Zenodo (see data/raw/MANIFEST.csv).
+data/raw/*.csv -text
