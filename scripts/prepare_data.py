@@ -1,4 +1,4 @@
-"""Step 1 entry point: download → clean → audit.
+"""Data preparation: download → clean → audit → study dataset.
 
 Usage::
 
@@ -18,6 +18,7 @@ from sdp.data.audit import AuditInputs, run_audit
 from sdp.data.clean import clean_file
 from sdp.data.download import DownloadError, download_all
 from sdp.data.legacy import compare_legacy
+from sdp.data.study import build_study, write_study_report
 from sdp.log import setup_logging
 from sdp.seed import set_seed
 
@@ -70,6 +71,9 @@ def main(argv: list[str] | None = None) -> int:
             mirror_verification=result.mirror_verification,
         ),
     )
+
+    # 4. Study dataset (inclusion rule)
+    write_study_report(cfg, build_study(cfg))
     logger.info("Data preparation finished.")
     return 0
 

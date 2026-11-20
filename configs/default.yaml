@@ -34,8 +34,9 @@ github_mirror:
   verify_against_zenodo:
     ant: ["1.7"]
 
-# Projects and the releases we expect to find. The downloader uses whatever
-# releases the Zenodo records actually contain and reports any differences.
+# Projects and their releases, listed in CHRONOLOGICAL order. This order is used
+# explicitly everywhere (time-aware splits, release pairs); versions are never
+# string-sorted. The downloader reports any difference from this list.
 projects:
   ant: ["1.3", "1.4", "1.5", "1.6", "1.7"]
   camel: ["1.0", "1.2", "1.4", "1.6"]
@@ -49,7 +50,10 @@ projects:
   xalan: ["2.4", "2.5", "2.6", "2.7"]
   xerces: ["init", "1.2", "1.3", "1.4"]
 
-audit:
+# Study inclusion rule (also used for the flags in the data audit):
+# 1. exclude releases whose defective ratio after cleaning is < min or > max;
+# 2. keep a project only if it has >= min_releases remaining releases.
+study:
   min_defective_ratio: 0.05
   max_defective_ratio: 0.75
   min_releases: 3

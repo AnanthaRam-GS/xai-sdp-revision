@@ -517,7 +517,9 @@ def download_all(cfg: Config, offline: bool = False) -> DownloadResult:
                 raise DownloadError({f"github-mirror ({cfg.github_mirror.repository})": str(exc)}) from exc
 
         manifest = pd.DataFrame(rows, columns=MANIFEST_COLUMNS)
-        manifest["_order"] = manifest["version"].map(version_sort_key)
+        order = {(p, v): i for p in cfg.projects for i, v in enumerate(cfg.release_order(p, list(
+            manifest.loc[manifest["project"] == p, "version"])))}  # fmt: skip
+        manifest["_order"] = [order[(p, v)] for p, v in zip(manifest["project"], manifest["version"])]
         manifest["_p"] = manifest["project"].map(list(cfg.projects).index)
         manifest = manifest.sort_values(["_p", "_order"]).drop(columns=["_p", "_order"])
         manifest.to_csv(raw_dir / MANIFEST_NAME, index=False)

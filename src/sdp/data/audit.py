@@ -120,14 +120,17 @@ def pair_overlap(prev: pd.DataFrame, nxt: pd.DataFrame) -> dict:
     }
 
 
-def release_overlap(releases: dict[tuple[str, str], pd.DataFrame]) -> pd.DataFrame:
+def release_overlap(
+    releases: dict[tuple[str, str], pd.DataFrame], cfg: Config | None = None
+) -> pd.DataFrame:
+    """Overlap for each pair of consecutive releases (chronological order from ``cfg``)."""
     by_project: dict[str, list[str]] = {}
     for project, version in releases:
         by_project.setdefault(project, []).append(version)
 
     rows = []
     for project, versions in by_project.items():
-        versions = sorted(versions, key=version_sort_key)
+        versions = cfg.release_order(project, versions) if cfg else sorted(versions, key=version_sort_key)
         for a, b in zip(versions, versions[1:]):
             rows.append(
                 {"project": project, "release_n": a, "release_n1": b}
@@ -174,7 +177,7 @@ def render_markdown(
     summary: pd.DataFrame,
     overlap: pd.DataFrame,
 ) -> str:
-    a = cfg.audit
+    a = cfg.study
     lo, hi = 100 * a.min_defective_ratio, 100 * a.max_defective_ratio
     flagged = flag_releases(summary, lo, hi)
     thin = flag_projects(summary, list(cfg.projects), a.min_releases)
@@ -306,7 +309,7 @@ def run_audit(cfg: Config, inputs: AuditInputs) -> tuple[pd.DataFrame, pd.DataFr
     """Compute and write the audit tables and the Markdown report."""
     releases = load_processed(cfg, inputs.manifest)
     summary = release_summary(releases, inputs.stats)
-    overlap = release_overlap(releases)
+    overlap = release_overlap(releases, cfg)
 
     reports: Path = cfg.paths.reports_dir
     reports.mkdir(parents=True, exist_ok=True)

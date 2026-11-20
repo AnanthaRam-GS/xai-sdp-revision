@@ -44,7 +44,7 @@ class MirrorSettings:
 
 
 @dataclass(frozen=True)
-class AuditSettings:
+class StudySettings:
     min_defective_ratio: float = 0.05
     max_defective_ratio: float = 0.75
     min_releases: int = 3
@@ -56,8 +56,21 @@ class Config:
     paths: Paths
     zenodo: ZenodoSettings
     projects: dict[str, list[str]]
-    audit: AuditSettings = field(default_factory=AuditSettings)
+    study: StudySettings = field(default_factory=StudySettings)
     github_mirror: MirrorSettings | None = None
+
+    def release_order(self, project: str, versions: list[str] | None = None) -> list[str]:
+        """Return ``versions`` (default: all configured) in the configured chronological order.
+
+        Releases not listed in the configuration are appended in natural version order
+        (with a warning from the caller where relevant).
+        """
+        configured = self.projects.get(project, [])
+        if versions is None:
+            return list(configured)
+        known = [v for v in configured if v in versions]
+        extra = sorted((v for v in versions if v not in configured), key=version_sort_key)
+        return known + extra
 
 
 def version_sort_key(version: str) -> tuple:
@@ -97,6 +110,6 @@ def load_config(path: str | Path = DEFAULT_CONFIG, root: Path = REPO_ROOT) -> Co
         paths=paths,
         zenodo=ZenodoSettings(**zen),
         projects=projects,
-        audit=AuditSettings(**raw.get("audit", {})),
+        study=StudySettings(**raw.get("study", {})),
         github_mirror=mirror,
     )
