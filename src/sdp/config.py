@@ -19,6 +19,7 @@ class Paths:
     legacy_dir: Path
     reports_dir: Path
     results_dir: Path = REPO_ROOT / "results"
+    artifacts_dir: Path = REPO_ROOT / "artifacts"
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,27 @@ class EvaluationSettings:
 
 
 @dataclass(frozen=True)
+class TuningSettings:
+    inner_folds: int = 3
+    n_trials_time_aware: int = 40
+    n_trials_within_release: int = 15
+    spaces: dict = field(default_factory=dict)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "TuningSettings":
+        n = d.get("n_trials", {})
+        return cls(
+            inner_folds=int(d.get("inner_folds", 3)),
+            n_trials_time_aware=int(n.get("time_aware", 40)),
+            n_trials_within_release=int(n.get("within_release", 15)),
+            spaces=dict(d.get("spaces", {})),
+        )
+
+    def n_trials(self, protocol: str) -> int:
+        return self.n_trials_time_aware if protocol == "time_aware" else self.n_trials_within_release
+
+
+@dataclass(frozen=True)
 class Config:
     seed: int
     paths: Paths
@@ -79,6 +101,7 @@ class Config:
     study: StudySettings = field(default_factory=StudySettings)
     github_mirror: MirrorSettings | None = None
     evaluation: EvaluationSettings = field(default_factory=EvaluationSettings)
+    tuning: TuningSettings = field(default_factory=TuningSettings)
 
     def release_order(self, project: str, versions: list[str] | None = None) -> list[str]:
         """Return ``versions`` (default: all configured) in the configured chronological order.
@@ -134,4 +157,5 @@ def load_config(path: str | Path = DEFAULT_CONFIG, root: Path = REPO_ROOT) -> Co
         study=StudySettings(**raw.get("study", {})),
         github_mirror=mirror,
         evaluation=EvaluationSettings.from_dict(raw.get("evaluation", {})),
+        tuning=TuningSettings.from_dict(raw.get("tuning", {})),
     )

@@ -1,0 +1,6 @@
+metric,mlp,lr,rf,xgb,manual_up,manual_down,all_defective,majority
+AUC,1,1,1,1,4,2,3,3
+MCC@tuned,1,1,1,1,4,2,3,3
+Popt,1,1,1,1,1,2,1,1
+Recall@20%LOC,1,1,1,1,1,2,1,1
+NECM15@tuned,2,2,2,2,2,2,1,1

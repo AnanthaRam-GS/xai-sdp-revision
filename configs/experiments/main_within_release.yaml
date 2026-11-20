@@ -1,0 +1,16 @@
+name: main_within_release
+description: Within-release 10 x 5-fold CV; tuned once per (release, repeat) on the first fold.
+protocol: within_release
+default_imbalance: class_weight
+models:
+  mlp: {preprocessing: [log_standard]}
+  lr: {preprocessing: [log_standard]}
+  rf: {preprocessing: [standard]}
+  xgb: {preprocessing: [standard]}
+  manual_up: {}
+  manual_down: {}
+  all_defective: {}
+  majority: {}
+seeds: [0]                               # one model seed per split; the repeats give the variance
+persist_models: false
+n_jobs: 10

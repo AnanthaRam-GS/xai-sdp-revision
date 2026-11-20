@@ -1,0 +1,13 @@
+name: main_time_aware_cumulative
+description: Robustness check - cumulative training (all releases <= n), test on n+1.
+protocol: time_aware
+time_aware_variant: cumulative
+default_imbalance: class_weight
+models:
+  mlp: {preprocessing: [log_standard]}
+  lr: {preprocessing: [log_standard]}
+  rf: {preprocessing: [standard]}
+  xgb: {preprocessing: [standard]}
+seeds: [0, 1, 2, 3, 4]
+persist_models: false
+n_jobs: 10

@@ -1,0 +1,11 @@
+name: ablation_preprocessing
+description: Preprocessing ablation for the scale-sensitive models (time-aware).
+protocol: time_aware
+time_aware_variant: consecutive
+default_imbalance: class_weight
+models:
+  mlp: {preprocessing: [none, standard, log_standard]}
+  lr: {preprocessing: [none, standard, log_standard]}
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+persist_models: true
+n_jobs: 10

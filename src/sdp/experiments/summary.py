@@ -84,12 +84,13 @@ def write_baselines_summary(cfg: Config, results: dict[str, pd.DataFrame], path:
         "validation-tuned threshold are in `results/<experiment>/metrics.csv`). Lower NECM15 "
         "is better; for every other metric higher is better.",
         "",
-        "Baselines: `all_defective` (probability 1.0 for every class); `loc_ranking` "
-        "(min-max normalised LOC, fitted on training data); `majority` (DummyClassifier, "
-        "prior strategy). Preprocessing: `standard`. Effort-aware metrics rank by predicted "
+        "Baselines: `manual_up` (risk 1 / max(LOC, 1)) and `manual_down` (risk LOC), both "
+        "min-max normalised on training data; `all_defective` (probability 1.0 for every "
+        "class); `majority` (DummyClassifier, prior strategy). Baselines always use raw "
+        "features (no preprocessing). Effort-aware metrics rank by predicted "
         "risk density (probability / LOC); a constant predictor (`all_defective`, `majority`) "
         "therefore inspects the smallest classes first, i.e. it behaves like the ManualUp "
-        "effort baseline, whereas `loc_ranking` inspects the largest classes first (ManualDown).",
+        "effort baseline, whereas `manual_down` inspects the largest classes first.",
         "",
         "Per-project CIs under the time-aware protocol rest on only 2-4 release pairs and are "
         "indicative only.",

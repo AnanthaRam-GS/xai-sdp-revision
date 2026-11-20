@@ -2,7 +2,7 @@
 
 Experimental pipeline for the revision of a research paper on explainable software defect prediction (Journal of Systems and Software).
 
-This repository is built in steps. **Step 1** covers the data pipeline (acquisition, cleaning, auditing); **step 2** finalises the study dataset and adds the evaluation framework (preprocessing, split protocols, metrics, statistics, experiment runner), tested with trivial baselines only. No learning models or explainers are included yet.
+This repository is built in steps. **Step 1** covers the data pipeline (acquisition, cleaning, auditing); **step 2** finalises the study dataset and adds the evaluation framework (preprocessing, split protocols, metrics, statistics, experiment runner); **step 3** adds the learned models (MLP, LR, RF, XGBoost), hyperparameter tuning, the main prediction experiments and ablations. No explainers are included yet.
 
 ## Setup
 
@@ -14,6 +14,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .                    # makes the `sdp` package importable
 ```
+
+**macOS note.** PyTorch, XGBoost (via Homebrew's `libomp`, required by the XGBoost wheel: `brew install libomp`) and scikit-learn each bring an OpenMP runtime, and two of them in one process crash with a segmentation fault. The entry points in `scripts/` and the test suite therefore re-execute themselves once with `DYLD_LIBRARY_PATH` pointing at PyTorch's `libomp`, so a single runtime is used (`src/sdp/runtime.py`). In your own scripts or notebooks, call `sdp.runtime.ensure_single_openmp_runtime()` before importing torch, xgboost or scikit-learn.
 
 ## Running step 1
 
@@ -117,6 +119,47 @@ python -m scripts.run_baselines       # all_defective, loc_ranking, majority
 
 Per-experiment outputs go to `results/<experiment>/metrics.csv` (long format) and `predictions.csv` (per test instance; git-ignored). The summary with means and 95% CIs per project and baseline is `reports/baselines_summary.md`.
 
+## Step 3: models, tuning and experiments
+
+### Models (`src/sdp/models/`)
+
+- **MLP** (`mlp.py`): PyTorch network built only from `nn.Linear`, `nn.ReLU(inplace=False)` and `nn.Dropout`, applied in order (as required by Captum DeepLift/DeepLiftShap); one logit output, plus `ProbabilityModel` (network + `nn.Sigmoid()`) for the explainers. `MLPClassifierTorch` is a scikit-learn style wrapper: mini-batch Adam with weight decay, `BCEWithLogitsLoss` (with `pos_weight = n_neg / n_pos` for `class_weight`), early stopping on validation loss (patience 20, max 500 epochs, best weights restored), `save`/`load`. CPU only and deterministic (`torch.use_deterministic_algorithms(True)`, one thread per worker).
+- **LR** (L2, lbfgs), **RF**, **XGBoost** (`tree_method="hist"`, early stopping on the validation split) in `classic.py`.
+- **Imbalance** (`imbalance.py`): `none`, `class_weight` (LR/RF `class_weight="balanced"`, XGBoost `scale_pos_weight`, MLP `pos_weight`) or `smote` (SMOTE on the 80% fitting part only; never on validation or test data). Default: `class_weight`.
+- **Baselines** (`baselines.py`): `manual_up` (risk 1 / max(LOC, 1)), `manual_down` (risk LOC), both min-max normalised on training data; `all_defective`; `majority`. Baselines always see raw features.
+
+### Tuning (`src/sdp/tuning.py`)
+
+Optuna TPE (seeded with the model seed) maximises the mean ROC-AUC of a stratified inner 3-fold CV on the 80% fitting part of the training data only; validation and test data are never used. Search spaces and budgets are in `configs/default.yaml` (`tuning`): 40 trials per time-aware split; for within-release, 15 trials once per (release, repeat) on the first fold, reused for the other four folds. After tuning, the model is refitted on the fitting part with early stopping on the validation part. Chosen hyperparameters: `results/<experiment>/hyperparameters.csv`.
+
+### Experiments (`configs/experiments/`, `src/sdp/experiments/engine.py`)
+
+| Experiment | Protocol | Models | Settings | Seeds |
+|---|---|---|---|---|
+| `main_time_aware` | time-aware, consecutive | mlp, lr, rf, xgb + 4 baselines | MLP/LR `log_standard`, RF/XGB `standard`; `class_weight` | 0–9 |
+| `main_within_release` | within-release 10 x 5-fold | same | same | 0 |
+| `ablation_preprocessing` | time-aware | mlp, lr | `none` / `standard` / `log_standard` | 0–9 |
+| `ablation_imbalance` | time-aware | mlp, rf | `none` / `class_weight` / `smote` (`log_standard`) | 0–9 |
+| `main_time_aware_cumulative` | time-aware, cumulative | mlp, lr, rf, xgb | as main | 0–4 |
+
+Seeds control model initialisation, tuning and SMOTE; the splits stay fixed. Jobs run in parallel with joblib (`n_jobs` in each config); every worker sets its own seeds and uses one thread. Each job's result is cached in `results/_cache/` under a hash of everything that determines it, so interrupted runs resume and units shared by experiments are computed once.
+
+For `main_time_aware` and `ablation_preprocessing`, every fitted learned model and its fitted preprocessor are saved to `artifacts/models/<experiment>/<split>/<model>/<preprocessing>/seed_<k>/` with `meta.json` (hyperparameters, validation-tuned threshold, training time, feature order); load them with `sdp.experiments.persistence.load_artifact`. `results/` and `artifacts/` are git-ignored.
+
+```bash
+# smoke test (one project, 2 seeds, 5 trials) and runtime estimate only
+python -m scripts.run_experiment configs/experiments/*.yaml --smoke --estimate-only
+# full runs (resumable)
+python -m scripts.run_experiment configs/experiments/main_time_aware.yaml \
+    configs/experiments/ablation_preprocessing.yaml configs/experiments/ablation_imbalance.yaml \
+    configs/experiments/main_time_aware_cumulative.yaml configs/experiments/main_within_release.yaml
+python -m scripts.make_step3_reports
+```
+
+### Reports (`src/sdp/analysis/`)
+
+`reports/step3_main_time_aware.md`, `step3_within_release.md`, `step3_ablation_preprocessing.md`, `step3_ablation_imbalance.md`, `step3_cumulative.md` and `step3_runtime.md` (each with CSVs). Summaries give the mean and bootstrap 95% CI over splits x seeds; Scott-Knott ESD ranks and Wilcoxon signed-rank tests (Holm) with Cliff's delta use per-split means across seeds, so each split counts once.
+
 ## Layout
 
 ```
@@ -129,9 +172,15 @@ src/sdp/data/clean.py      per-release cleaning
 src/sdp/data/audit.py      audit tables and report
 src/sdp/data/study.py      study inclusion rule and release pairs
 src/sdp/eval/              preprocessing, splits, metrics, statistics
-src/sdp/experiments/       runner, trivial baselines, summary reports
+src/sdp/models/            MLP, LR/RF/XGBoost, baselines, imbalance handling
+src/sdp/tuning.py          Optuna tuning
+src/sdp/experiments/       step 2 runner, step 3 engine, configs, persistence
+src/sdp/analysis/          step 3 aggregation and reports
+configs/experiments/       experiment definitions
 scripts/prepare_data.py    data preparation entry point
-scripts/run_baselines.py   baseline experiments entry point
+scripts/run_baselines.py   baseline experiments entry point (step 2)
+scripts/run_experiment.py  step 3 experiments (smoke test, estimate, full runs)
+scripts/make_step3_reports.py  step 3 reports
 tests/                     pytest suite
 ```
 

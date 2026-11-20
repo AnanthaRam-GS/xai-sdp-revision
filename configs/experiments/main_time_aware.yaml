@@ -1,0 +1,17 @@
+name: main_time_aware
+description: Main time-aware experiment (train on release n, test on n+1).
+protocol: time_aware
+time_aware_variant: consecutive
+default_imbalance: class_weight
+models:
+  mlp: {preprocessing: [log_standard]}
+  lr: {preprocessing: [log_standard]}
+  rf: {preprocessing: [standard]}       # trees are scale-invariant anyway
+  xgb: {preprocessing: [standard]}
+  manual_up: {}
+  manual_down: {}
+  all_defective: {}
+  majority: {}
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]   # model initialisation and tuning; splits stay fixed
+persist_models: true
+n_jobs: 10

@@ -1,0 +1,6 @@
+experiment,jobs,jobs_reused_from_cache,n_jobs,wall_time_h,tuning_cpu_h,fit_cpu_h
+main_time_aware,1056,16,10,0.43,4.25,0.04
+main_within_release,2720,0,10,0.25,2.11,0.3
+ablation_preprocessing,1440,480,10,0.36,5.07,0.07
+ablation_imbalance,1440,240,10,1.02,11.43,0.12
+main_time_aware_cumulative,480,0,10,0.23,2.29,0.02
