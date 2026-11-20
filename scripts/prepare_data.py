@@ -67,6 +67,7 @@ def main(argv: list[str] | None = None) -> int:
             missing_releases=result.missing_releases,
             unexpected_releases=result.unexpected_releases,
             legacy=legacy,
+            mirror_verification=result.mirror_verification,
         ),
     )
     logger.info("Data preparation finished.")

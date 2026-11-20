@@ -20,6 +20,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 import pandas as pd
 import requests
@@ -35,15 +36,22 @@ MANIFEST_COLUMNS = [
     "project",
     "version",
     "file_name",
+    "source",  # "zenodo" or "github-mirror"
     "zenodo_record_id",
     "doi",
+    "repository_url",
+    "commit_sha",
+    "file_path",
     "download_url",
     "md5",
+    "git_blob_sha",
     "retrieval_date_utc",
     "row_count",
     "source_file",
     "version_label",
 ]
+SOURCE_ZENODO = "zenodo"
+SOURCE_MIRROR = "github-mirror"
 USER_AGENT = "xai-sdp-revision-data-pipeline/0.1"
 
 
@@ -78,6 +86,7 @@ class ZenodoRecord:
 @dataclass
 class DownloadResult:
     manifest: pd.DataFrame
+    mirror_verification: pd.DataFrame | None = None
     missing_releases: dict[str, list[str]] = field(default_factory=dict)
     unexpected_releases: dict[str, list[str]] = field(default_factory=dict)
 
@@ -190,13 +199,21 @@ def read_raw_csv(source: Path | bytes) -> pd.DataFrame:
     return pd.read_csv(buf, dtype={"version": str})
 
 
+def git_blob_sha(content: bytes) -> str:
+    """SHA-1 of a file as git stores it (``blob <size>\\0<content>``)."""
+    return hashlib.sha1(b"blob %d\0" % len(content) + content).hexdigest()
+
+
 def split_by_version(content: bytes, file_version: str) -> dict[str, tuple[bytes, str]]:
     """Split a CSV by its ``version`` column when it holds several releases.
 
     Returns ``{version: (bytes, version_label)}``. A single-release file is returned
-    unchanged (so its md5 still matches Zenodo) under ``file_version``.
+    unchanged (so its md5 still matches Zenodo) under ``file_version``. Files without a
+    ``version`` column (the GitHub mirror layout) are returned unchanged as well.
     """
     df = read_raw_csv(content)
+    if "version" not in df.columns:
+        return {file_version: (content, file_version)}
     labels = sorted(df["version"].astype(str).unique(), key=version_sort_key)
     if len(labels) <= 1:
         return {file_version: (content, labels[0] if labels else "")}
@@ -276,10 +293,15 @@ def acquire_project(
                     "project": project,
                     "version": version,
                     "file_name": out.name,
+                    "source": SOURCE_ZENODO,
                     "zenodo_record_id": record.record_id,
                     "doi": record.doi,
+                    "repository_url": "",
+                    "commit_sha": "",
+                    "file_path": "",
                     "download_url": f.url,
                     "md5": f.md5,
+                    "git_blob_sha": "",
                     "retrieval_date_utc": retrieved,
                     "row_count": _count_rows(part),
                     "source_file": f.key,
@@ -287,6 +309,158 @@ def acquire_project(
                 }
             )
     return rows
+
+
+# ----------------------------------------------------------------- GitHub mirror
+
+
+class MirrorVerificationError(DownloadError):
+    """Raised when mirror files disagree with Zenodo or with the legacy files."""
+
+
+def list_mirror_tree(session: requests.Session, cfg: Config) -> dict[str, tuple[str, int]]:
+    """Return ``{path: (blob_sha, size)}`` for every file in the pinned mirror commit."""
+    m = cfg.github_mirror
+    resp = session.get(
+        f"{m.api_url}/repos/{m.repository}/git/trees/{m.commit}",
+        params={"recursive": "1"},
+        timeout=cfg.zenodo.timeout_seconds,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    if data.get("truncated"):
+        raise LookupError("GitHub returned a truncated tree; cannot resolve file paths reliably")
+    return {e["path"]: (e["sha"], int(e.get("size", 0))) for e in data["tree"] if e["type"] == "blob"}
+
+
+def mirror_path(cfg: Config, tree: dict[str, tuple[str, int]], project: str, version: str) -> str:
+    """Resolve the path of ``<project>-<version>.csv`` in the mirror's data directory."""
+    d = cfg.github_mirror.directory.strip("/")
+    wanted = f"{project}-{version}.csv".lower()
+    hits = [p for p in tree if p.lower().startswith(f"{d}/") and p.rsplit("/", 1)[-1].lower() == wanted]
+    if len(hits) != 1:
+        raise LookupError(f"expected exactly one '{wanted}' under '{d}/' in the mirror, found {hits}")
+    return hits[0]
+
+
+def fetch_mirror_file(
+    session: requests.Session, cfg: Config, path: str, expected_sha: str
+) -> tuple[bytes, str]:
+    """Download one mirror file at the pinned commit and verify its git blob SHA-1."""
+    m = cfg.github_mirror
+    url = f"{m.raw_url}/{m.repository}/{m.commit}/{quote(path)}"
+    resp = session.get(url, timeout=cfg.zenodo.timeout_seconds)
+    resp.raise_for_status()
+    sha = git_blob_sha(resp.content)
+    if sha != expected_sha:
+        raise ValueError(f"git blob SHA mismatch for {path}: expected {expected_sha}, got {sha}")
+    return resp.content, url
+
+
+def acquire_mirror(
+    session: requests.Session,
+    cfg: Config,
+    tree: dict[str, tuple[str, int]],
+    previous: pd.DataFrame,
+) -> list[dict]:
+    """Download (or re-verify) the releases configured to come from the GitHub mirror."""
+    m = cfg.github_mirror
+    rows = []
+    for project, versions in m.releases.items():
+        for version in versions:
+            path = mirror_path(cfg, tree, project, version)
+            sha, size = tree[path]
+            target = cfg.paths.raw_dir / f"{project}-{version}.csv"
+            prev = previous[(previous["project"] == project) & (previous["version"] == version)]
+            url = f"{m.raw_url}/{m.repository}/{m.commit}/{quote(path)}"
+            if target.exists() and git_blob_sha(target.read_bytes()) == sha:
+                content = target.read_bytes()
+                retrieved = (
+                    prev["retrieval_date_utc"].iloc[0]
+                    if len(prev)
+                    else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                )
+                logger.info("%s: %s already present and verified (git blob %s); skipping.", project, path, sha)
+            else:
+                logger.info("%s: downloading %s from the GitHub mirror (%d bytes).", project, path, size)
+                content, url = fetch_mirror_file(session, cfg, path, sha)
+                target.write_bytes(content)
+                retrieved = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                logger.info("%s: %s verified against git blob SHA-1 %s.", project, path, sha)
+            rows.append(
+                {
+                    "project": project,
+                    "version": version,
+                    "file_name": target.name,
+                    "source": SOURCE_MIRROR,
+                    "zenodo_record_id": "",
+                    "doi": "",
+                    "repository_url": m.repository_url,
+                    "commit_sha": m.commit,
+                    "file_path": path,
+                    "download_url": url,
+                    "md5": md5_of(content),
+                    "git_blob_sha": sha,
+                    "retrieval_date_utc": retrieved,
+                    "row_count": _count_rows(content),
+                    "source_file": target.name,
+                    "version_label": version,
+                }
+            )
+    return rows
+
+
+def verify_mirror(
+    session: requests.Session, cfg: Config, tree: dict[str, tuple[str, int]]
+) -> pd.DataFrame:
+    """Show the mirror is faithful: compare it with Zenodo and with the legacy files.
+
+    1. Releases in ``verify_against_zenodo`` are downloaded (not stored) and compared
+       row by row with the Zenodo file in ``data/raw``.
+    2. Mirror releases stored in ``data/raw`` are compared with ``data/legacy/<project>``.
+
+    Raises :class:`MirrorVerificationError` if any comparison shows a difference.
+    """
+    from sdp.data.legacy import compare_release  # local import avoids a cycle
+
+    m = cfg.github_mirror
+    records, failures = [], {}
+
+    for project, versions in m.verify_against_zenodo.items():
+        for version in versions:
+            path = mirror_path(cfg, tree, project, version)
+            content, _ = fetch_mirror_file(session, cfg, path, tree[path][0])
+            zenodo = cfg.paths.raw_dir / f"{project}-{version}.csv"
+            res = compare_release(content, zenodo)
+            records.append({"project": project, "version": version, "comparison": "mirror vs Zenodo",
+                            "mirror_path": path} | res)  # fmt: skip
+            if not res["identical"]:
+                failures[f"{project}-{version}"] = "mirror differs from Zenodo"
+
+    for project, versions in m.releases.items():
+        for version in versions:
+            legacy = cfg.paths.legacy_dir / project / f"{project}-{version}.csv"
+            row = {"project": project, "version": version, "comparison": "mirror vs legacy",
+                   "mirror_path": mirror_path(cfg, tree, project, version)}  # fmt: skip
+            if not legacy.exists():
+                logger.warning("%s %s: no legacy file at %s; cannot verify.", project, version, legacy)
+                records.append(row | {"identical": None})
+                continue
+            res = compare_release(cfg.paths.raw_dir / f"{project}-{version}.csv", legacy)
+            records.append(row | res)
+            if not res["identical"]:
+                failures[f"{project}-{version}"] = "mirror differs from legacy file"
+
+    report = pd.DataFrame(records)
+    for r in report.itertuples():
+        logger.log(
+            logging.INFO if r.identical else logging.WARNING,
+            "%s %s (%s): %s.", r.project, r.version, r.comparison,
+            {True: "identical", False: "DIFFERENT", None: "not checked"}[r.identical],
+        )  # fmt: skip
+    if failures:
+        raise MirrorVerificationError(failures)
+    return report
 
 
 def compare_with_expected(
@@ -315,6 +489,7 @@ def download_all(cfg: Config, offline: bool = False) -> DownloadResult:
     raw_dir.mkdir(parents=True, exist_ok=True)
     previous = load_manifest(raw_dir)
 
+    verification = None
     if offline:
         manifest = verify_offline(cfg, previous)
     else:
@@ -330,6 +505,17 @@ def download_all(cfg: Config, offline: bool = False) -> DownloadResult:
         if failures:
             raise DownloadError(failures)
 
+        if cfg.github_mirror is not None:
+            try:
+                tree = list_mirror_tree(session, cfg)
+                rows.extend(acquire_mirror(session, cfg, tree, previous))
+                verification = verify_mirror(session, cfg, tree)
+            except MirrorVerificationError:
+                raise
+            except (requests.RequestException, LookupError, ValueError) as exc:
+                logger.error("GitHub mirror: acquisition failed: %s", exc)
+                raise DownloadError({f"github-mirror ({cfg.github_mirror.repository})": str(exc)}) from exc
+
         manifest = pd.DataFrame(rows, columns=MANIFEST_COLUMNS)
         manifest["_order"] = manifest["version"].map(version_sort_key)
         manifest["_p"] = manifest["project"].map(list(cfg.projects).index)
@@ -342,7 +528,7 @@ def download_all(cfg: Config, offline: bool = False) -> DownloadResult:
         logger.warning("%s: expected release(s) NOT on Zenodo: %s", project, ", ".join(versions))
     for project, versions in unexpected.items():
         logger.warning("%s: unexpected release(s) on Zenodo: %s", project, ", ".join(versions))
-    return DownloadResult(manifest, missing, unexpected)
+    return DownloadResult(manifest, verification, missing, unexpected)
 
 
 def verify_offline(cfg: Config, manifest: pd.DataFrame) -> pd.DataFrame:

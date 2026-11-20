@@ -29,6 +29,21 @@ class ZenodoSettings:
 
 
 @dataclass(frozen=True)
+class MirrorSettings:
+    repository: str
+    commit: str
+    directory: str = "bug-data"
+    api_url: str = "https://api.github.com"
+    raw_url: str = "https://raw.githubusercontent.com"
+    releases: dict[str, list[str]] = field(default_factory=dict)
+    verify_against_zenodo: dict[str, list[str]] = field(default_factory=dict)
+
+    @property
+    def repository_url(self) -> str:
+        return f"https://github.com/{self.repository}"
+
+
+@dataclass(frozen=True)
 class AuditSettings:
     min_defective_ratio: float = 0.05
     max_defective_ratio: float = 0.75
@@ -42,6 +57,7 @@ class Config:
     zenodo: ZenodoSettings
     projects: dict[str, list[str]]
     audit: AuditSettings = field(default_factory=AuditSettings)
+    github_mirror: MirrorSettings | None = None
 
 
 def version_sort_key(version: str) -> tuple:
@@ -69,10 +85,18 @@ def load_config(path: str | Path = DEFAULT_CONFIG, root: Path = REPO_ROOT) -> Co
     if not projects:
         raise ValueError("The configuration lists no projects.")
 
+    mirror = None
+    if raw.get("github_mirror"):
+        m = dict(raw["github_mirror"])
+        for key in ("releases", "verify_against_zenodo"):
+            m[key] = {str(p): [str(v) for v in vs] for p, vs in (m.get(key) or {}).items()}
+        mirror = MirrorSettings(**m)
+
     return Config(
         seed=int(raw["seed"]),
         paths=paths,
         zenodo=ZenodoSettings(**zen),
         projects=projects,
         audit=AuditSettings(**raw.get("audit", {})),
+        github_mirror=mirror,
     )
