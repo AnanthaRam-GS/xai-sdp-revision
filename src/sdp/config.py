@@ -18,6 +18,7 @@ class Paths:
     processed_dir: Path
     legacy_dir: Path
     reports_dir: Path
+    results_dir: Path = REPO_ROOT / "results"
 
 
 @dataclass(frozen=True)

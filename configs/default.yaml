@@ -8,6 +8,7 @@ paths:
   processed_dir: data/processed
   legacy_dir: data/legacy       # optional, local only (not redistributed)
   reports_dir: reports
+  results_dir: results           # experiment outputs (git-ignored)
 
 zenodo:
   api_url: https://zenodo.org/api
