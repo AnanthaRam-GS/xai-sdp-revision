@@ -33,7 +33,12 @@ def load(cfg: Config, experiment: str, what: str = "metrics") -> pd.DataFrame:
 
 def run_info(cfg: Config, experiment: str) -> dict:
     p = cfg.paths.results_dir / experiment / "run_info.json"
-    return json.loads(p.read_text()) if p.exists() else {}
+    info = json.loads(p.read_text()) if p.exists() else {}
+    hp = cfg.paths.results_dir / experiment / "hyperparameters.csv"
+    if hp.exists():
+        trials = sorted(pd.read_csv(hp, usecols=["n_trials"])["n_trials"].unique())
+        info["n_trials_used"] = ", ".join(str(int(t)) for t in trials)
+    return info
 
 
 def _write(cfg: Config, name: str, md: list[str], csvs: dict[str, pd.DataFrame]) -> None:
@@ -56,8 +61,8 @@ def _setup_lines(df: pd.DataFrame, info: dict) -> list[str]:
         f"{int(seeds.reindex(LEARNED).max()) if seeds.reindex(LEARNED).notna().any() else 1}; "
         f"rule-based baselines: 1 (deterministic).",
         f"- Models (preprocessing, imbalance): {desc}.",
-        f"- Tuning trials per tuning run: {hp.get('n_trials') or 'protocol default'} "
-        "(see `results/<experiment>/hyperparameters.csv`).",
+        f"- Optuna trials per tuning run: {info.get('n_trials_used') or hp.get('n_trials') or 'protocol default'} "
+        "(chosen hyperparameters in `results/<experiment>/hyperparameters.csv`).",
     ]
 
 
@@ -132,7 +137,7 @@ def ablation_report(cfg: Config, experiment: str, name: str, title: str, factor:
 def cumulative_report(cfg: Config, name: str = "step3_cumulative") -> pd.DataFrame:
     cons = load(cfg, "main_time_aware")
     cum = load(cfg, "main_time_aware_cumulative")
-    seeds = sorted(cum["seed"].unique())
+    seeds = sorted(int(s) for s in cum["seed"].unique())
     cons = cons[cons["model"].isin(LEARNED) & cons["seed"].isin(seeds)].assign(variant="consecutive")
     cum = cum.assign(variant="cumulative")
     df = pd.concat([cons, cum], ignore_index=True)
