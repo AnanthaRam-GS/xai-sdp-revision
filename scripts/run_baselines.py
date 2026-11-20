@@ -18,7 +18,7 @@ import sys
 from sdp.config import DEFAULT_CONFIG, load_config
 from sdp.data.study import build_study
 from sdp.eval.splits import PROTOCOLS, project_frame
-from sdp.experiments.baselines import BASELINES
+from sdp.models.baselines import BASELINES
 from sdp.experiments.runner import ExperimentSpec, run_experiment
 from sdp.experiments.summary import write_baselines_summary
 from sdp.log import setup_logging

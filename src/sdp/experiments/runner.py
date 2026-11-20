@@ -71,7 +71,10 @@ def run_split(
     loc = df[EFFORT_COL].to_numpy(dtype="float64")
     metric_rows, pred_frames = [], []
     for name, factory in spec.models.items():
-        pipe = make_pipeline(spec.preprocessing, factory())
+        model = factory()
+        # Rule-based baselines need raw LOC, so their input is never preprocessed.
+        mode = "none" if getattr(model, "requires_raw_features", False) else spec.preprocessing
+        pipe = make_pipeline(mode, model)
         pipe.fit(X.iloc[split.fit_idx], y[split.fit_idx])
         threshold = best_mcc_threshold(y[split.val_idx], positive_proba(pipe, X.iloc[split.val_idx]))
         p_test = positive_proba(pipe, X.iloc[split.test_idx])
@@ -84,7 +87,7 @@ def run_split(
             "split_id": split.split_id,
             "seed": split.seed,
             "model": name,
-            "preprocessing": spec.preprocessing,
+            "preprocessing": mode,
         }
         for mode, metric, value in evaluate(y_test, p_test, loc_test, threshold, e.necm_cost_ratio, e.recall_at_loc):
             metric_rows.append(base | {"threshold_mode": mode, "metric": metric, "value": value})

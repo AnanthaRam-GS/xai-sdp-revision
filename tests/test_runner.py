@@ -12,7 +12,7 @@ from sdp.config import Config, EvaluationSettings, Paths, ZenodoSettings
 from sdp.data.clean import COUNT_COL, ID_COL, LABEL_COL, METRICS
 from sdp.data.study import StudyDataset
 from sdp.eval.splits import RELEASE_COL
-from sdp.experiments.baselines import BASELINES, LocRanking
+from sdp.models.baselines import BASELINES
 from sdp.experiments.runner import METRICS_COLUMNS, PREDICTION_COLUMNS, ExperimentSpec, run_experiment
 
 
@@ -64,14 +64,11 @@ def test_runner_writes_long_metrics_and_predictions(setup, protocol, n_splits):
     np.testing.assert_allclose(get("majority", "roc_auc"), 0.5)
     np.testing.assert_allclose(get("all_defective", "recall", "fixed_0.5"), 1.0)
     np.testing.assert_allclose(get("majority", "mcc", "fixed_0.5"), 0.0)
+    # Baselines are never preprocessed.
+    assert set(metrics.loc[metrics["model"].isin(BASELINES), "preprocessing"]) == {"none"}
     # Every test instance appears once per split and model, with its original LOC.
     df = frames["x"]
-    first = preds[(preds["model"] == "loc_ranking") & (preds["split_id"] == preds["split_id"].iloc[0])]
+    first = preds[(preds["model"] == "manual_down") & (preds["split_id"] == preds["split_id"].iloc[0])]
     lookup = df.set_index(ID_COL)["loc"]
     np.testing.assert_allclose(first["loc"].to_numpy(), lookup.loc[first["class_name"]].to_numpy())
 
-
-def test_loc_ranking_uses_training_range():
-    train = pd.DataFrame({"loc": [10.0, 20.0, 30.0]})
-    m = LocRanking().fit(train)
-    np.testing.assert_allclose(m.predict_proba(pd.DataFrame({"loc": [5.0, 20.0, 40.0]}))[:, 1], [0.0, 0.5, 1.0])
