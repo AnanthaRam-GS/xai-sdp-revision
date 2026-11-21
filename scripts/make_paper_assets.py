@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.log import setup_logging
 from sdp.paper import collect, figures, numbers, tables
 
@@ -36,7 +36,7 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.out) if args.out else REPO_ROOT / "paper"
     data = Path(args.data) if args.data else out / "data"
     if args.collect:
-        fs = yaml.safe_load((REPO_ROOT / "configs" / "fidelity.yaml").read_text(encoding="utf-8"))
+        fs = yaml.safe_load((CONFIG_DIR / "fidelity.yaml").read_text(encoding="utf-8"))
         collect.collect(cfg, data, Path(cfg.paths.artifacts_dir) / fs.get("output_dir", "fidelity"))
     figures.make_all(reports, data, out / "figures")
     tables.make_all(reports, data, out / "tables")

@@ -474,7 +474,8 @@ def retraining_comparison(cfg: Config, es, rs: dict, ex_main: E.Explanations) ->
         return {"md": ["## AutoSpearman retraining", "", "_Not run._", ""], "tests": pd.DataFrame()}
     a = pd.read_csv(path)
     m = pd.read_csv(cfg.paths.results_dir / "main_time_aware" / "metrics.csv")
-    m = m[m["model"].isin(["mlp", "rf"]) & m["seed"].isin([0, 1, 2])]
+    seeds = sorted(a["seed"].unique())  # the seeds of the retraining experiment
+    m = m[m["model"].isin(["mlp", "rf"]) & m["seed"].isin(seeds)]
     specs = [("roc_auc", "none", "AUC"), ("mcc", "val_mcc", "MCC@tuned"), ("popt", "none", "Popt")]
     rows = []
     for model in ("mlp", "rf"):
@@ -494,15 +495,15 @@ def retraining_comparison(cfg: Config, es, rs: dict, ex_main: E.Explanations) ->
     a_es_root = Path(cfg.paths.artifacts_dir) / f"attributions_{exp}"
     lines = ["## AutoSpearman retraining", "",
              f"MLP (log_standard) and RF (standard) retrained on the AutoSpearman-selected metrics of each training "
-             f"release with the step 3 engine (time-aware consecutive, class_weight, seeds 0–2, "
+             f"release with the step 3 engine (time-aware consecutive, class_weight, seeds {', '.join(map(str, seeds))}, "
              f"{int(hp['n_trials'].iloc[0])} Optuna trials; persisted under `artifacts/models/{exp}/`). The full-feature "
-             "models are the `main_time_aware` models with seeds 0–2 (tuned with 40 trials, so the comparison "
+             f"models are the `main_time_aware` models with the same seeds (tuned with {int(pd.read_csv(cfg.paths.results_dir / 'main_time_aware' / 'hyperparameters.csv')['n_trials'].iloc[0])} trials, so the comparison "
              "also differs in tuning budget). Per-split means over seeds; Wilcoxon signed-rank, Holm within "
              "model, Cliff's delta (AutoSpearman vs all metrics).", "",
              to_markdown(format_comparisons(tests)), ""]  # fmt: skip
     if a_es_root.exists():
         ex_a = E.load_explanations(a_es_root, fill_missing=True)
-        main_sub = ex_main.subset((ex_main.meta["seed"].isin([0, 1, 2])
+        main_sub = ex_main.subset((ex_main.meta["seed"].isin(seeds)
                                    & (((ex_main.meta["model"] == "mlp") & (ex_main.meta["method"] == "DeepLiftShap"))
                                       | ((ex_main.meta["model"] == "rf") & (ex_main.meta["method"] == "TreeSHAP")))).to_numpy())  # fmt: skip
         rows = []

@@ -16,14 +16,14 @@ import sys
 
 from sdp.analysis import explanations as E
 from sdp.analysis import step4
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.explain.runner import load_explain_settings
 from sdp.log import setup_logging
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--settings", default=str(REPO_ROOT / "configs" / "explain.yaml"))
+    parser.add_argument("--settings", default=str(CONFIG_DIR / "explain.yaml"))
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     args = parser.parse_args(argv)
     setup_logging()

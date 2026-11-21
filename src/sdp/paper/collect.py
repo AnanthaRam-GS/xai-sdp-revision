@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from sdp.config import Config
+from sdp.config import CONFIG_DIR, Config
 
 logger = logging.getLogger(__name__)
 
@@ -66,65 +66,85 @@ def runtime_totals(res: Path) -> pd.DataFrame:
 
 
 def collect(cfg: Config, out: Path, fidelity_root: Path | None = None) -> list[Path]:
+    """Refresh the paper inputs whose sources exist; an input whose sources are missing
+    (e.g. the git-ignored artefacts in the replication archive) keeps its committed file."""
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     res = Path(cfg.paths.results_dir)
-    written = []
+    written, skipped = [], []
 
-    m = _metric_frame(res / "main_time_aware" / "metrics.csv")
-    per = m.groupby(["project", "split_id", "model", "label"], as_index=False)["value"].mean()
-    per.to_csv(out / "performance_per_split.csv", index=False)
-    written.append(out / "performance_per_split.csv")
+    def item(name: str, make) -> None:
+        try:
+            frame = make()
+        except (FileNotFoundError, KeyError, ValueError, StopIteration) as exc:
+            skipped.append(f"{name} ({exc.__class__.__name__}: {exc})")
+            return
+        if frame is None:
+            skipped.append(f"{name} (no source)")
+            return
+        path = out / name
+        if name.endswith(".json"):
+            path.write_text(frame, encoding="utf-8")
+        else:
+            frame.to_csv(path, index=name.startswith("dendrogram"))
+        written.append(path)
 
-    w = _metric_frame(res / "main_within_release" / "metrics.csv")
-    w.groupby(["model", "label"], as_index=False)["value"].mean().to_csv(out / "within_release_means.csv", index=False)
-    written.append(out / "within_release_means.csv")
+    def performance():
+        m = _metric_frame(res / "main_time_aware" / "metrics.csv")
+        return m.groupby(["project", "split_id", "model", "label"], as_index=False)["value"].mean()
 
-    parts = []
-    for exp, factor in (("ablation_preprocessing", "preprocessing"), ("ablation_imbalance", "imbalance")):
-        a = _metric_frame(res / exp / "metrics.csv")
-        a = a.groupby(["split_id", "model", factor, "label"], as_index=False)["value"].mean()
-        parts.append(a.rename(columns={factor: "setting"}).assign(ablation=factor))
-    pd.concat(parts).to_csv(out / "ablation_per_split.csv", index=False)
-    written.append(out / "ablation_per_split.csv")
+    def within():
+        return _metric_frame(res / "main_within_release" / "metrics.csv").groupby(["model", "label"], as_index=False)["value"].mean()
 
-    if fidelity_root is not None and (Path(fidelity_root) / "curves").exists():
+    def ablation():
+        parts = []
+        for exp, factor in (("ablation_preprocessing", "preprocessing"), ("ablation_imbalance", "imbalance")):
+            a = _metric_frame(res / exp / "metrics.csv")
+            a = a.groupby(["split_id", "model", factor, "label"], as_index=False)["value"].mean()
+            parts.append(a.rename(columns={factor: "setting"}).assign(ablation=factor))
+        return pd.concat(parts)
+
+    def curves():
+        if fidelity_root is None or not (Path(fidelity_root) / "curves").exists():
+            return None
         from sdp.fidelity.evaluation import load_curves
 
         c = load_curves(Path(fidelity_root) / "curves")
         c = c[c["removal"] == "marginal"]
-        # mean over instances within a split is stored; average splits with equal weight
-        c.groupby(["model", "method", "kind", "k"], as_index=False)["value"].mean().to_csv(out / "deletion_curves.csv", index=False)
-        written.append(out / "deletion_curves.csv")
+        # the stored curves are means over a split's instances; average splits with equal weight
+        return c.groupby(["model", "method", "kind", "k"], as_index=False)["value"].mean()
 
-    rt = runtime_totals(res)
-    if len(rt):
-        rt.to_csv(out / "runtime_totals.csv", index=False)
-        written.append(out / "runtime_totals.csv")
-    clusters = res / "stability" / "clusters.json"
-    if clusters.exists():
-        (out / "stable_clusters.json").write_text(clusters.read_text(encoding="utf-8"), encoding="utf-8")
-        written.append(out / "stable_clusters.json")
-    null = res / "stability" / "null.csv"
-    if null.exists():
-        pd.read_csv(null).to_csv(out / "stability_null.csv", index=False)
-        written.append(out / "stability_null.csv")
+    def runtime():
+        rt = runtime_totals(res)
+        return rt if rt["wall_hours"].sum() > 0 else None
 
-    try:
+    def clusters():
+        p = res / "stability" / "clusters.json"
+        return p.read_text(encoding="utf-8") if p.exists() else None
+
+    def null():
+        p = res / "stability" / "null.csv"
+        return pd.read_csv(p) if p.exists() else None
+
+    def dendrogram():
         from sdp.eval.preprocess import feature_frame
         from sdp.explain.runner import experiment_splits, load_explain_settings
-        from sdp.config import REPO_ROOT
 
-        es = load_explain_settings(REPO_ROOT / "configs" / "explain.yaml")
-        splits, frames = experiment_splits(cfg, es)
+        splits, frames = experiment_splits(cfg, load_explain_settings(CONFIG_DIR / "explain.yaml"))
         split = next((s for s in splits if s.split_id == DENDROGRAM_SPLIT), None)
-        if split is not None:
-            X = feature_frame(frames[split.project]).iloc[split.fit_idx]
-            rho = X.astype(float).corr(method="spearman")
-            rho.to_csv(out / "dendrogram_spearman.csv")
-            written.append(out / "dendrogram_spearman.csv")
-    except FileNotFoundError as exc:  # processed data absent
-        logger.warning("Dendrogram input not collected: %s", exc)
+        if split is None:  # e.g. quick mode without jedit: the first consecutive split instead
+            split = next((s for s in splits if s.split_id.startswith("ta-consecutive:")), None)
+            if split is None:
+                return None
+            logger.warning("Representative split %s absent; the dendrogram uses %s", DENDROGRAM_SPLIT, split.split_id)
+        return feature_frame(frames[split.project]).iloc[split.fit_idx].astype(float).corr(method="spearman")
+
+    for name, make in (("performance_per_split.csv", performance), ("within_release_means.csv", within),
+                       ("ablation_per_split.csv", ablation), ("deletion_curves.csv", curves),
+                       ("runtime_totals.csv", runtime), ("stable_clusters.json", clusters), ("stability_null.csv", null),
+                       ("dendrogram_spearman.csv", dendrogram)):  # fmt: skip
+        item(name, make)
+    for s_ in skipped:
+        logger.warning("Paper input not refreshed (the committed file is kept): %s", s_)
     logger.info("Collected %d paper input file(s) into %s", len(written), out)
     return written
-

@@ -39,13 +39,24 @@ EVALUATED = {
 ABSOLUTE = {"Saliency"}  # evaluated as |attribution|
 
 
-def store_attributions(root: Path, split_id: str, model: str, method: str, seed: int = 0) -> np.ndarray:
-    """Attributions (n_test × 20, canonical feature order, instance order) from the store."""
+def store_attributions_by_id(root: Path, split_id: str, model: str, method: str, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    """``(instance ids, attributions)`` from the store, sorted by instance id (the ids are
+    positions in the split's test set; a method may cover only a subset of them)."""
     path = partition_path(root, model, method, safe_split_id(split_id), seed)
     ex = from_long(pd.read_parquet(path))
-    order = np.argsort(ex.meta["instance_id"].to_numpy(), kind="stable")
+    ids = ex.meta["instance_id"].to_numpy()
+    order = np.argsort(ids, kind="stable")
     attr = ex.attr[order]
-    return np.abs(attr) if method in ABSOLUTE else attr
+    return ids[order], (np.abs(attr) if method in ABSOLUTE else attr)
+
+
+def store_attributions(root: Path, split_id: str, model: str, method: str, seed: int = 0) -> np.ndarray:
+    """Attributions (n_test × 20, canonical feature order, instance order) from the store;
+    the method must cover every test instance."""
+    ids, attr = store_attributions_by_id(root, split_id, model, method, seed)
+    if not np.array_equal(ids, np.arange(len(ids))):
+        raise ValueError(f"{split_id} {model} {method}: explanations cover only part of the test set")
+    return attr
 
 
 def ranking(attr: np.ndarray) -> np.ndarray:

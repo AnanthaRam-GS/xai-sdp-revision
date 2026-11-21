@@ -106,3 +106,15 @@ def test_estimate_scales_with_instances():
     est = runner.estimate_runtime(timings, jobs, n_jobs=3, efficiency=1.0)
     assert est["cpu_hours"] == pytest.approx(90 / 3600) and est["wall_hours"] == pytest.approx(30 / 3600)
     assert runner.estimate_runtime(timings, jobs, 3, 1.0, {"LIME": 0.4})["cpu_hours"] == pytest.approx(36 / 3600)
+
+
+def test_a_job_without_checks_keeps_earlier_checks(toy):
+    df, split, models, settings, tmp = toy
+    prep, path, stored = models["lr"]
+    root = tmp / "attributions"
+    runner.execute_job(runner.ExplainJob(split, "lr", prep, 0, ("LinearSHAP",), str(path)), df, settings, root, stored)
+    job = runner.ExplainJob(split, "lr", prep, 0, ("LIME",), str(path))
+    before = pd.read_parquet(job.checks_path(root))
+    assert len(before) > 0
+    runner.execute_job(job, df, settings, root, stored)
+    pd.testing.assert_frame_equal(pd.read_parquet(job.checks_path(root)), before)

@@ -166,7 +166,7 @@ Cross-model agreement (seeds 0–2, mean over instances), feature level vs clust
 
 ## AutoSpearman retraining
 
-MLP (log_standard) and RF (standard) retrained on the AutoSpearman-selected metrics of each training release with the step 3 engine (time-aware consecutive, class_weight, seeds 0–2, 25 Optuna trials; persisted under `artifacts/models/autospearman_time_aware/`). The full-feature models are the `main_time_aware` models with seeds 0–2 (tuned with 40 trials, so the comparison also differs in tuning budget). Per-split means over seeds; Wilcoxon signed-rank, Holm within model, Cliff's delta (AutoSpearman vs all metrics).
+MLP (log_standard) and RF (standard) retrained on the AutoSpearman-selected metrics of each training release with the step 3 engine (time-aware consecutive, class_weight, seeds 0, 1, 2, 25 Optuna trials; persisted under `artifacts/models/autospearman_time_aware/`). The full-feature models are the `main_time_aware` models with the same seeds (tuned with 40 trials, so the comparison also differs in tuning budget). Per-split means over seeds; Wilcoxon signed-rank, Holm within model, Cliff's delta (AutoSpearman vs all metrics).
 
 | model | metric | a | b | n | mean_a | mean_b | p_value | p_holm | cliffs_delta | magnitude |
 |---|---|---|---|---|---|---|---|---|---|---|

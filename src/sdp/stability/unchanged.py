@@ -67,11 +67,19 @@ def compare_unchanged(store: ImportanceStore, a, b, matches: pd.DataFrame, expla
     rows = []
     if matches.empty:
         return pd.DataFrame()
-    ia, ib = matches["instance_id_a"].to_numpy(), matches["instance_id_b"].to_numpy()
     for model, method in explanations:
         seeds = sorted(set(store.seeds(a.split_id, model, method)) & set(store.seeds(b.split_id, model, method)))
         if not seeds:
             continue
+        # rows by instance id (a method explained on a subset covers only some classes)
+        ids_a = store.meta(a.split_id, model, method, seeds[0])["instance_id"].to_numpy()
+        ids_b = store.meta(b.split_id, model, method, seeds[0])["instance_id"].to_numpy()
+        keep = np.isin(matches["instance_id_a"], ids_a) & np.isin(matches["instance_id_b"], ids_b)
+        if not keep.any():
+            continue
+        m_ = matches[keep].reset_index(drop=True)
+        ia = np.searchsorted(ids_a, m_["instance_id_a"].to_numpy())
+        ib = np.searchsorted(ids_b, m_["instance_id_b"].to_numpy())
         acc = {k: [] for k in ("spearman", "fa5", "sa5", "dprob", "flip")}
         for s in seeds:
             A, B = store.attr(a.split_id, model, method, s)[ia], store.attr(b.split_id, model, method, s)[ib]
@@ -91,8 +99,8 @@ def compare_unchanged(store: ImportanceStore, a, b, matches: pd.DataFrame, expla
                      "seed_sa5": ft["sign_agreement@5"]}  # fmt: skip
         mean = {k: np.nanmean(np.stack(v), axis=0) for k, v in acc.items()}
         frame = pd.DataFrame({"project": a.project, "split_a": a.split_id, "split_b": b.split_id, "model": model,
-                              "method": method, "explanation": label(model, method), "class_key": matches["key"],
-                              "mapped": matches["mapped"], "n_seeds": len(seeds), **mean, **floor})  # fmt: skip
+                              "method": method, "explanation": label(model, method), "class_key": m_["key"],
+                              "mapped": m_["mapped"], "n_seeds": len(seeds), **mean, **floor})  # fmt: skip
         rows.append(frame)
-    return pd.concat(rows, ignore_index=True)
+    return pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
 

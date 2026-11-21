@@ -26,6 +26,7 @@ import json
 import logging
 import os
 import time
+import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -33,13 +34,14 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from sdp.config import REPO_ROOT, Config
+from sdp.config import CONFIG_DIR, Config, REPO_ROOT
 from sdp.data.clean import ID_COL, LABEL_COL
 from sdp.data.study import build_study
 from sdp.eval.preprocess import EFFORT_COL, FEATURES, feature_frame
 from sdp.eval.splits import Split, project_frame, time_aware_splits
 from sdp.experiments.persistence import artifact_dir, load_artifact, safe_split_id
 from sdp.explain.base import (
+    subset_context,
     ExplainContext,
     Explainer,
     load_background,
@@ -55,7 +57,7 @@ from sdp.explain.other_methods import OTHER_EXPLAINERS
 logger = logging.getLogger(__name__)
 
 CODE_VERSION = "step4-v1"
-EXPERIMENTS_DIR = REPO_ROOT / "configs" / "experiments"
+EXPERIMENTS_DIR = CONFIG_DIR / "experiments"
 EXPLAINERS: dict[str, type[Explainer]] = {**CAPTUM_EXPLAINERS, **OTHER_EXPLAINERS}
 PROB_TOLERANCE = 1e-6  # loaded model vs stored step 3 predictions
 
@@ -85,6 +87,9 @@ class ExplainSettings:
     n_jobs: int = 10
     output_dir: str = "attributions"
     reduced: bool = False
+    # Explain the expensive methods (LIME, KernelSHAP) on at most this many test instances
+    # per split (the same seeded sample for every seed); None = all instances.
+    expensive_instances: int | None = None
 
     def methods_for(self, model: str, seed: int) -> tuple[str, ...]:
         return tuple(m for m in self.methods[model] if m not in self.expensive_methods or seed in self.expensive_seeds)
@@ -151,6 +156,8 @@ class ExplainJob:
             "preprocessing": self.preprocessing, "background_size": settings.background_size,
             "methods": {m: settings.method_params(m) for m in self.methods}, "digest": h.hexdigest(),
         }  # fmt: skip
+        if settings.expensive_instances is not None:  # only then, so that earlier cache keys stay valid
+            spec["expensive_instances"] = settings.expensive_instances
         return hashlib.sha1(json.dumps(spec, sort_keys=True, default=str).encode()).hexdigest()
 
     def outputs(self, root: Path) -> list[Path]:
@@ -251,8 +258,10 @@ def execute_job(job: ExplainJob, df: pd.DataFrame, settings: ExplainSettings, ro
         for name in job.methods:
             explainer = EXPLAINERS[name](**settings.method_params(name))
             set_seed(job.seed, torch_threads=1, quiet=True)
-            res = explainer.explain(ctx)
-            write_long(to_long(ctx, res), partition_path(root, job.model, name, job.split_dir, job.seed))
+            ids = expensive_sample(job.split.split_id, len(ctx.X_test), settings) if name in settings.expensive_methods else None
+            use = ctx if ids is None else subset_context(ctx, ids)
+            res = explainer.explain(use)
+            write_long(to_long(use, res, ids), partition_path(root, job.model, name, job.split_dir, job.seed))
             if res.checks is not None:
                 checks.append(res.checks)
                 p95 = float(res.checks["error"].quantile(0.95))
@@ -263,10 +272,23 @@ def execute_job(job: ExplainJob, df: pd.DataFrame, settings: ExplainSettings, ro
                             "method": name, "seed": job.seed, "n_instances": len(ctx.X_test),
                             "n_background": len(ctx.background), "n_fit": len(job.split.fit_idx),
                             "time_s": res.time_s})  # fmt: skip
-    chk = pd.concat(checks, ignore_index=True) if checks else pd.DataFrame(columns=["split_id"])
-    write_long(chk, job.checks_path(root))
+    # A job without checked methods (e.g. LIME only) must not overwrite the checks of an
+    # earlier job of the same (split, model, seed); it writes an empty file only if none exists.
+    if checks:
+        write_long(pd.concat(checks, ignore_index=True), job.checks_path(root))
+    elif not job.checks_path(root).exists():
+        write_long(pd.DataFrame(columns=["split_id"]), job.checks_path(root))
     return {"label": job.label, "timings": timings, "load_s": load_s, "max_prob_diff": diff,
             "wall_s": time.perf_counter() - t0, "pid": os.getpid()}  # fmt: skip
+
+
+def expensive_sample(split_id: str, n: int, settings: ExplainSettings) -> np.ndarray | None:
+    """Positions of the test instances explained by the expensive methods (None = all)."""
+    limit = settings.expensive_instances
+    if limit is None or n <= limit:
+        return None
+    rng = np.random.default_rng(zlib.crc32(split_id.encode()) % (2**31))
+    return np.sort(rng.permutation(n)[:limit])
 
 
 def run_cached(job: ExplainJob, df: pd.DataFrame, settings: ExplainSettings, root: str,

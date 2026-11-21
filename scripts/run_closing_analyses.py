@@ -21,7 +21,7 @@ import pandas as pd
 from sdp.analysis import cost_calibration as CC
 from sdp.analysis import step8
 from sdp.analysis.validation_predictions import split_validation_predictions, verify
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.explain.runner import experiment_splits, load_explain_settings
 from sdp.log import setup_logging
 from sdp.robustness.common import run_parallel
@@ -32,7 +32,7 @@ logger = logging.getLogger("run_closing_analyses")
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
-    parser.add_argument("--explain-settings", default=str(REPO_ROOT / "configs" / "explain.yaml"))
+    parser.add_argument("--explain-settings", default=str(CONFIG_DIR / "explain.yaml"))
     parser.add_argument("--n-jobs", type=int, default=10)
     args = parser.parse_args(argv)
     setup_logging()

@@ -217,16 +217,19 @@ def load_background(path: Path) -> pd.DataFrame:
 # --------------------------------------------------------------------- the store
 
 
-def to_long(ctx: ExplainContext, result: MethodResult) -> pd.DataFrame:
-    """Long-format rows (one per instance and feature), joined to features by name."""
+def to_long(ctx: ExplainContext, result: MethodResult, instance_ids=None) -> pd.DataFrame:
+    """Long-format rows (one per instance and feature), joined to features by name.
+    ``instance_ids`` (positions in the full test set) default to 0..n−1; they are given
+    when only a subset of the test instances was explained."""
     attr = result.attributions
     n, feats = len(attr), list(attr.columns)
+    ids = np.arange(n, dtype=np.int32) if instance_ids is None else np.asarray(instance_ids, dtype=np.int32)
     raw = ctx.X_test_raw[feats].to_numpy()
     rep = lambda a: np.repeat(np.asarray(a), len(feats))  # noqa: E731
     out = pd.DataFrame({
         "split_id": ctx.split_id, "project": ctx.project, "train_release": ctx.train_release,
         "test_release": ctx.test_release, "model": ctx.model_name, "method": result.method,
-        "seed": np.int16(ctx.seed), "instance_id": rep(np.arange(n, dtype=np.int32)), "class_name": rep(ctx.class_name),
+        "seed": np.int16(ctx.seed), "instance_id": rep(ids), "class_name": rep(ctx.class_name),
         "outcome": rep(ctx.outcome), "y_true": rep(ctx.y_true.astype(np.int8)), "y_prob": rep(ctx.y_prob),
         "loc": rep(ctx.loc), "feature": np.tile(feats, n), "feature_value_raw": raw.reshape(-1),
         "attribution": attr.to_numpy(dtype="float64").reshape(-1), "output_scale": result.output_scale,

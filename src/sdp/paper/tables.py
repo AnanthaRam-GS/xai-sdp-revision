@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from sdp.config import REPO_ROOT
+from sdp.config import CONFIG_DIR, REPO_ROOT
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ def tab_dataset(reports: Path, data: Path) -> str:
 def tab_explainer_settings(reports: Path, data: Path) -> str:
     from sdp.explain.runner import load_explain_settings
 
-    es = load_explain_settings(REPO_ROOT / "configs" / "explain.yaml")
+    es = load_explain_settings(CONFIG_DIR / "explain.yaml")
     p = es.method_params
     bg = f"{es.background_size} training rows, stratified"
     rows = [

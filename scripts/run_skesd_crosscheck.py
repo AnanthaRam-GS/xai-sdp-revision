@@ -23,7 +23,7 @@ import yaml
 from sdp.analysis import skesd_crosscheck as X
 from sdp.analysis import step6
 from sdp.analysis.step4 import _write
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.data.audit import to_markdown
 from sdp.log import setup_logging
 
@@ -32,7 +32,7 @@ def inputs(cfg) -> dict[str, pd.DataFrame]:
     m = pd.read_csv(cfg.paths.results_dir / "main_time_aware" / "metrics.csv")
     auc = m[(m["metric"] == "roc_auc") & (m["threshold_mode"] == "none")]
     auc = auc.groupby(["split_id", "model"])["value"].mean().unstack()
-    fs = yaml.safe_load((REPO_ROOT / "configs" / "fidelity.yaml").read_text(encoding="utf-8"))
+    fs = yaml.safe_load((CONFIG_DIR / "fidelity.yaml").read_text(encoding="utf-8"))
     root = Path(cfg.paths.artifacts_dir) / fs.get("output_dir", "fidelity")
     info = json.loads((cfg.paths.results_dir / "fidelity" / "run_info.json").read_text())
     from sdp.fidelity.evaluation import load_instances

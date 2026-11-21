@@ -19,7 +19,7 @@ import json
 import logging
 import sys
 
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.explain.base import rename_method
 from sdp.explain.runner import (
     MissingArtifactError,
@@ -34,7 +34,7 @@ from sdp.log import setup_logging
 from sdp.seed import set_seed
 
 logger = logging.getLogger("run_explanations")
-DEFAULT_SETTINGS = REPO_ROOT / "configs" / "explain.yaml"
+DEFAULT_SETTINGS = CONFIG_DIR / "explain.yaml"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -46,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--smoke-split", default=None, help="split id for the smoke test (default: median size)")
     parser.add_argument("--estimate-only", action="store_true", help="stop after the estimate")
     parser.add_argument("--reduced", action="store_true", help="use the reduced LIME/KernelSHAP sample sizes")
+    parser.add_argument("--methods", nargs="+", default=None,
+                        help="explain only these methods (for every model they apply to), e.g. LIME_mean_sampling")
     parser.add_argument("--keep-method-as", nargs=2, metavar=("OLD", "NEW"), default=None,
                         help="before running, keep the stored results of method OLD under the name NEW")  # fmt: skip
     args = parser.parse_args(argv)
@@ -56,6 +58,11 @@ def main(argv: list[str] | None = None) -> int:
     settings = load_explain_settings(args.settings)
     if args.reduced:
         settings = settings.with_reduction()
+    if args.methods:
+        from sdp.explain.runner import EXPLAINERS
+
+        settings = dataclasses.replace(settings, methods={
+            model: [m for m in args.methods if model in EXPLAINERS[m].models] for model in settings.models})  # fmt: skip
     n_jobs = args.n_jobs or settings.n_jobs
     if args.keep_method_as:
         moved = rename_method(settings.root(cfg), *args.keep_method_as)
