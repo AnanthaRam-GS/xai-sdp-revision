@@ -1,0 +1,9 @@
+model,mode,break_even_c
+mlp,val_mcc,3.35
+mlp,cost_aware,4.15
+lr,val_mcc,3.7
+lr,cost_aware,4.55
+rf,val_mcc,3.5
+rf,cost_aware,3.9000000000000004
+xgb,val_mcc,3.2
+xgb,cost_aware,3.95
