@@ -106,6 +106,20 @@ class DeepLiftExplainer(CaptumExplainer):
         return method.attribute(x, baselines=bg.mean(dim=0, keepdim=True), target=0)
 
 
+class DeepLiftZeroBaselineExplainer(DeepLiftExplainer):
+    """DeepLift with an all-zero baseline in the model's input space. With unscaled
+    inputs (preprocessing ``none``) this is the original paper's setting: every metric
+    is compared with the value 0. Completeness is checked against f(0)."""
+
+    name = "DeepLift_zero_baseline"
+
+    def _call(self, method, x, ctx, bg):
+        return method.attribute(x, baselines=torch.zeros_like(x[:1]), target=0)
+
+    def _reference(self, module, bg):
+        return float(_forward(module, torch.zeros_like(bg[:1]))[0])
+
+
 class DeepLiftShapExplainer(CaptumExplainer):
     name = "DeepLiftShap"
     completeness = True
@@ -168,6 +182,7 @@ CAPTUM_EXPLAINERS = {
     cls.name: cls
     for cls in (
         DeepLiftExplainer,
+        DeepLiftZeroBaselineExplainer,
         DeepLiftShapExplainer,
         GradientShapExplainer,
         IntegratedGradientsExplainer,

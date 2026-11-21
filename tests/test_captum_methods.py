@@ -54,3 +54,14 @@ def test_saliency_is_signed_gradient(ctx):
     ixg = cm.InputXGradientExplainer().explain(ctx).attributions.to_numpy()
     assert (sal < 0).any()  # raw gradient, not |gradient|
     np.testing.assert_allclose(ixg, sal * ctx.X_test.to_numpy(), atol=1e-12)
+
+
+def test_zero_baseline_deeplift(ctx):
+    res = cm.DeepLiftZeroBaselineExplainer().explain(ctx)
+    module = cm.probability_module(ctx)
+    f0 = float(module(torch.zeros((1, len(FEATURES)), dtype=torch.float64)))
+    np.testing.assert_allclose(res.checks["reference"], f0)
+    assert res.checks["error"].max() < 1e-10  # completeness w.r.t. f(0)
+    np.testing.assert_allclose(res.attributions.sum(axis=1), ctx.y_prob - f0, atol=1e-6)
+    mean_bl = cm.DeepLiftExplainer().explain(ctx).attributions
+    assert not np.allclose(res.attributions, mean_bl)
