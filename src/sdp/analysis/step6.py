@@ -424,7 +424,12 @@ def sanity_report(cfg: Config, root: Path, flag: float) -> pd.DataFrame:
 # -------------------------------------------------------------------- summary
 
 
-def summary_report(cfg: Config, inst: pd.DataFrame, roar_split: pd.DataFrame, verdict: pd.DataFrame) -> None:
+SUMMARY_METRICS = ["deletion_gain", "insertion_gain", "faithfulness", "roar_gain", "kar_gain"]
+
+
+def summary_ranks(inst: pd.DataFrame, roar_split: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Per-split metric values per explanation and their within-split ranks (with the
+    mean rank used for the overall Scott-Knott ESD ordering)."""
     per_split = inst.groupby(["explanation", "project", "split_id"])[["deletion_gain", "insertion_gain", "faithfulness"]].mean().reset_index()
     rs = roar_split.copy()
     rnd = rs[rs["family"] == "random"].set_index(["split_id", "model", "test"])["area"]
@@ -435,11 +440,16 @@ def summary_report(cfg: Config, inst: pd.DataFrame, roar_split: pd.DataFrame, ve
     rg = meth.pivot_table(index=["explanation", "split_id"], columns="test", values="gain").reset_index()
     rg = rg.rename(columns={"ROAR": "roar_gain", "KAR": "kar_gain"})
     per_split = per_split.merge(rg, on=["explanation", "split_id"], how="left")
-    metrics = ["deletion_gain", "insertion_gain", "faithfulness", "roar_gain", "kar_gain"]
     ranks = per_split.copy()
-    for m in metrics:
+    for m in SUMMARY_METRICS:
         ranks[m] = per_split.groupby("split_id")[m].rank(ascending=False)
-    ranks["mean_rank"] = ranks[metrics].mean(axis=1, skipna=True)
+    ranks["mean_rank"] = ranks[SUMMARY_METRICS].mean(axis=1, skipna=True)
+    return per_split, ranks
+
+
+def summary_report(cfg: Config, inst: pd.DataFrame, roar_split: pd.DataFrame, verdict: pd.DataFrame) -> None:
+    per_split, ranks = summary_ranks(inst, roar_split)
+    metrics = SUMMARY_METRICS
     long = ranks.assign(metric="neg_mean_rank", value=-ranks["mean_rank"], threshold_mode="none", seed=0)
     sk = _skesd(long, [T.MetricSpec("neg_mean_rank", "none", "overall")], ORDER).set_index("metric").T["overall"]
     means = per_split.groupby("explanation")[metrics].mean().reindex(ORDER)

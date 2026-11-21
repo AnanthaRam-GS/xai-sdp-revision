@@ -1,0 +1,7 @@
+R package,dataset,blocks,treatments,groups_ours,groups_r,same_partition,same_group_numbers,differences,identical treatments sent once
+ScottKnottESD 2.0.3,step3_auc,24,8,3,4,False,False,"all_defective: ours 2, R 3; lr: ours 1, R 2; majority: ours 2, R 3; manual_up: ours 3, R 4; mlp: ours 1, R 2; rf: ours 1, R 2; xgb: ours 1, R 2",majority = all_defective
+ScottKnottESD 2.0.3,step6_fidelity_rank,24,14,4,9,False,False,"LR-LIME: ours 4, R 8; LR-LinearSHAP: ours 2, R 3; MLP-DeepLift: ours 3, R 5; MLP-DeepLiftShap: ours 1, R 2; MLP-GradientShap: ours 2, R 4; MLP-InputXGradient: ours 3, R 6; MLP-IntegratedGradients: ours 2, R 4; MLP-LIME: ours 3, R 5; MLP-Saliency: ours 3, R 7; RF-LIME: ours 4, R 9; RF-TreeSHAP: ours 1, R 2; XGB-LIME: ours 4, R 8",none
+ScottKnottESD 2.0.3,step7_cross_version_spearman,14,14,2,6,False,False,"LR-LIME: ours 2, R 4; LR-LinearSHAP: ours 2, R 3; MLP-DeepLift: ours 2, R 5; MLP-DeepLiftShap: ours 2, R 5; MLP-GradientShap: ours 2, R 5; MLP-InputXGradient: ours 2, R 4; MLP-IntegratedGradients: ours 2, R 5; MLP-KernelSHAP: ours 2, R 5; MLP-LIME: ours 2, R 6; MLP-Saliency: ours 2, R 6; RF-LIME: ours 1, R 2",none
+ScottKnottESD 1.2.2,step3_auc,24,8,3,3,True,True,none,majority = all_defective
+ScottKnottESD 1.2.2,step6_fidelity_rank,24,14,4,4,True,True,none,none
+ScottKnottESD 1.2.2,step7_cross_version_spearman,14,14,2,2,True,True,none,none
