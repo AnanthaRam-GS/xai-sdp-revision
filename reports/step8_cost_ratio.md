@@ -2,6 +2,8 @@
 
 NECM_c = (FP + c·FN)/N on the test releases of the 24 time-aware splits (`main_time_aware` predictions), seeds averaged per split; mean and 95% bootstrap CI over splits. Thresholds: 0.5; the validation-MCC threshold stored in step 3 (all models); and for the learned models the cost-aware threshold minimising NECM_c on the validation split. Validation predictions come from the persisted step 3 models by inference only; they reproduce the stored thresholds and test predictions exactly (maximum differences 0.0e+00 and 0.0e+00 over 960 models).
 
+Note: the Majority baseline outputs a constant score per split (the training defective rate). Its validation-MCC threshold equals that score and predictions are p ≥ t, so at the tuned threshold it flags every class and coincides with all_defective; at 0.5 it flags none (step 3 behaviour, unchanged).
+
 ## NECM at the validation-MCC threshold
 
 | model | c = 1 | c = 2 | c = 3 | c = 5 | c = 7.5 | c = 10 | c = 15 | c = 20 |

@@ -39,6 +39,10 @@ def cost_report(cfg: Config, ps: pd.DataFrame, summ: pd.DataFrame, be: pd.DataFr
         f"only; they reproduce the stored thresholds and test predictions exactly (maximum differences "
         f"{check['threshold_diff'].max():.1e} and {check['test_prob_max_diff'].max():.1e} over {len(check)} models).",
         "",
+        "Note: the Majority baseline outputs a constant score per split (the training defective rate). Its "
+        "validation-MCC threshold equals that score and predictions are p ≥ t, so at the tuned threshold it flags "
+        "every class and coincides with all_defective; at 0.5 it flags none (step 3 behaviour, unchanged).",
+        "",
         "## NECM at the validation-MCC threshold",
         "",
         to_markdown(table("val_mcc")),
