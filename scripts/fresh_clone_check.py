@@ -45,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--keep", action="store_true", help="keep the temporary clone")
     args = parser.parse_args(argv)
     work = Path(args.workdir or tempfile.mkdtemp(prefix="sdp-fresh-clone-"))
+    work.mkdir(parents=True, exist_ok=True)
     clone = work / "repo"
     log = work / "fresh_clone.log"
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True).stdout.strip()
