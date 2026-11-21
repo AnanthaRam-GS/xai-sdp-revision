@@ -160,6 +160,48 @@ python -m scripts.make_step3_reports
 
 `reports/step3_main_time_aware.md`, `step3_within_release.md`, `step3_ablation_preprocessing.md`, `step3_ablation_imbalance.md`, `step3_cumulative.md` and `step3_runtime.md` (each with CSVs). Summaries give the mean and bootstrap 95% CI over splits x seeds; Scott-Knott ESD ranks and Wilcoxon signed-rank tests (Holm) with Cliff's delta use per-split means across seeds, so each split counts once.
 
+## Step 4: explanations and explainer agreement
+
+Explains every test instance of the 24 `main_time_aware` splits with the persisted step 3 models (nothing is retrained): MLP and LR (`log_standard`), RF and XGBoost (`standard`), all `class_weight`. Settings: `configs/explain.yaml`.
+
+### Conventions (`src/sdp/explain/base.py`)
+
+- Explained output: P(defective) for every model and method (the MLP through `ProbabilityModel`), except LR-LinearSHAP, which is exact on the log-odds scale and stored with `output_scale="log_odds"`.
+- Attributions are computed in each model's input space (after its fitted, element-wise preprocessor) and stored by feature name.
+- Background set per (split, seed): 100 rows of the fitting part of the training data, stratified by label with the model seed (all rows if fewer), saved under `artifacts/attributions/_backgrounds/`. DeepLift and Integrated Gradients use its mean as the single baseline.
+- Store: long-format Parquet, `artifacts/attributions/<model>/<method>/<split>__seed_<k>.parquet` (split, project, releases, model, method, seed, instance, class name, TP/FP/FN/TN outcome at the validation-MCC threshold, y_true, y_prob, LOC, feature, raw value, attribution, output scale). Read it with `sdp.explain.base.read_attributions` or `sdp.analysis.explanations.load_explanations`.
+
+### Methods
+
+| Model | Methods | Seeds |
+|---|---|---|
+| MLP | DeepLift, DeepLiftShap, GradientShap (50 samples, stdevs 0), IntegratedGradients (64 Gauss-Legendre steps), Saliency (signed gradient), InputXGradient (`captum_methods.py`) | 0–9 |
+| MLP | LIME (5000 samples, 20 features, no discretisation), KernelSHAP (1000 samples, no lasso selection) | 0–2 |
+| RF, XGBoost | interventional TreeSHAP on the probability, background set as data | 0–9 |
+| LR | LinearSHAP (log-odds) | 0–9 |
+| LR, RF, XGBoost | LIME | 0–2 |
+
+LIME weights are mapped to features through `explanation.as_map()[1]` (index → weight). Completeness (DeepLift, DeepLiftShap, IntegratedGradients; Captum on a float64 copy of the MLP) and additivity (TreeSHAP, LinearSHAP) are checked per instance and saved under `artifacts/attributions/_checks/`. For random forests, shap's interventional code stores thresholds as float32, so the forest given to shap has its thresholds rounded down to float32 (identical predictions on float32 inputs); otherwise additivity fails by up to 0.02. Every loaded model is checked against its stored step 3 test predictions.
+
+```bash
+# smoke test (one split, seed 0, all methods) and runtime estimate
+python -m scripts.run_explanations --smoke --estimate-only
+# full run (resumable; with --smoke it reduces LIME/KernelSHAP samples if the estimate exceeds 8 h)
+python -m scripts.run_explanations
+python -m scripts.make_step4_reports
+```
+
+### Analysis (`src/sdp/analysis/explanations.py`, `step4.py`, `figures.py`)
+
+Absolute attributions are L1-normalised per instance, averaged within a split (seeds averaged), then over splits (each split weighted equally). Reports in `reports/`:
+
+- `step4_global_importance.md`: rankings for all instances, outcome groups and defective classes, per project and ALL;
+- `step4_direction.md`: Spearman(raw value, signed attribution) and disagreements in direction;
+- `step4_size_share.md`: share of attribution on `loc` and on {loc, wmc, rfc, npm}, and loc as top-1 feature;
+- `step4_agreement.md`: feature, rank, sign and signed-rank agreement@k (k = 3, 5), Spearman and Kendall (Krishna et al., 2022), within the MLP, across models (SHAP family) and LIME across models, with bootstrap CIs over instances;
+- `step4_sanity_checks.md`, `step4_runtime.md`;
+- draft figures (300 dpi) in `reports/figures/step4/`.
+
 ## Layout
 
 ```
@@ -175,12 +217,16 @@ src/sdp/eval/              preprocessing, splits, metrics, statistics
 src/sdp/models/            MLP, LR/RF/XGBoost, baselines, imbalance handling
 src/sdp/tuning.py          Optuna tuning
 src/sdp/experiments/       step 2 runner, step 3 engine, configs, persistence
-src/sdp/analysis/          step 3 aggregation and reports
+src/sdp/explain/           explainers, background sets, attribution store, runner (step 4)
+src/sdp/analysis/          step 3 and step 4 aggregation, reports and figures
 configs/experiments/       experiment definitions
 scripts/prepare_data.py    data preparation entry point
 scripts/run_baselines.py   baseline experiments entry point (step 2)
 scripts/run_experiment.py  step 3 experiments (smoke test, estimate, full runs)
 scripts/make_step3_reports.py  step 3 reports
+scripts/run_explanations.py    step 4 explanations (smoke test, estimate, full run)
+scripts/make_step4_reports.py  step 4 reports and figures
+configs/explain.yaml       step 4 explanation settings
 tests/                     pytest suite
 ```
 
@@ -188,6 +234,7 @@ tests/                     pytest suite
 
 - Jureczko, M., & Madeyski, L. (2010). Towards identifying software project clusters with regard to defect prediction. *PROMISE '10*.
 - Herbold, S. (2018). Benchmarking cross-project defect prediction approaches with costs metrics. arXiv:1801.04107.
+- Krishna, S., Han, T., Gu, A., Pombra, J., Jabbari, S., Wu, S., & Lakkaraju, H. (2022). The disagreement problem in explainable machine learning: A practitioner's perspective. arXiv:2202.01602.
 - Mende, T., & Koschke, R. (2010). Effort-aware defect prediction models. *CSMR 2010*, 107–116.
 - Romano, J., Kromrey, J. D., Coraggio, J., & Skowronek, J. (2006). Appropriate statistics for ordinal level data. *Florida Association of Institutional Research*.
 - Scott, A. J., & Knott, M. (1974). A cluster analysis method for grouping means in the analysis of variance. *Biometrics*, 30(3), 507–512.
