@@ -24,6 +24,17 @@ SCALE_NOTE = (
     "LR-LIME explains the probability. Because attributions are L1-normalised per instance before "
     "aggregation, and the comparisons are rank-based, the scale difference does not affect them."
 )
+LIME_NOTE = (
+    "**LIME weights are slopes.** With `discretize_continuous=False` (and LIME's default "
+    "`sample_around_instance=False`), LIME fits a weighted linear surrogate to samples drawn around "
+    "the training mean, and its weights are that surrogate's coefficients (per standardised unit). "
+    "They are slopes, like Saliency's gradients, not contributions relative to a reference "
+    "(slope × (x − reference)) as for the SHAP family, DeepLift, Integrated Gradients and "
+    "InputXGradient. They also vary little between instances: the median coefficient of variation "
+    "across the test instances of a split is about 0.1–0.2 for LIME and above 1 for TreeSHAP, "
+    "DeepLiftShap and Saliency (checked on ant 1.5→1.6, seed 0). LIME's sign therefore reflects the "
+    "slope, not whether the instance's value raises its prediction."
+)
 AGG_NOTE = (
     "Absolute attributions are normalised per instance to unit L1 norm, averaged over the test "
     "instances of a split (and over the seeds of that split), then over splits; every split has the "
@@ -118,6 +129,8 @@ def importance_report(cfg: Config, ex: E.Explanations) -> pd.DataFrame:
         "",
         SCALE_NOTE,
         "",
+        LIME_NOTE,
+        "",
         "Cells: feature (mean normalised |attribution|). The full rankings (all groups, all projects, "
         "with ranks) are in `step4_global_importance.csv`.",
         "",
@@ -189,6 +202,11 @@ def direction_report(cfg: Config, ex: E.Explanations, imp: pd.DataFrame) -> pd.D
         "",
         SCALE_NOTE,
         "",
+        LIME_NOTE,
+        "Consequently, the near-zero Spearman correlations of LIME and Saliency below say that their "
+        "slope hardly changes with the feature's value; they are not evidence of a different direction. "
+        "Direction disagreements involving LIME or Saliency should be read with this in mind.",
+        "",
         "## Spearman(raw value, signed attribution), ALL",
         "",
         to_markdown(table),
@@ -210,8 +228,8 @@ def direction_report(cfg: Config, ex: E.Explanations, imp: pd.DataFrame) -> pd.D
         "",
     ]
     if sal:
-        md += [f"Note: {', '.join(sal)} is a local gradient, not a difference from a reference; its "
-               "sign is reported for completeness.", ""]  # fmt: skip
+        md += [f"Note: {', '.join(sal)} and the LIME weights are slopes, not differences from a reference; "
+               "their signs are reported for completeness.", ""]  # fmt: skip
     _write(cfg, "step4_direction", md, {"": dirs, "_disagreements": dis})
     return dirs
 
@@ -329,7 +347,9 @@ def agreement_report(cfg: Config, ex: E.Explanations) -> pd.DataFrame:
         "Ties in the top-k ordering are broken by the canonical feature order; rank correlations use "
         "average ranks. Seeds 0–2 (where all methods exist); each instance's agreement is averaged over "
         "the three seeds, and the mean and 95% percentile bootstrap CI (2000 resamples) are over "
-        "instances. Saliency is compared as |gradient| for magnitudes and by the gradient's sign for the "
+        "instances. The CIs treat instances as independent; instances of one split share one model, so "
+        "they understate between-split variation (per-project values are in the CSV). Saliency is "
+        "compared as |gradient| for magnitudes and by the gradient's sign for the "
         "sign-based metrics.",
         "",
         "**Note.** DeepLift and DeepLiftShap share the same propagation rules (DeepLiftShap averages "
@@ -339,6 +359,10 @@ def agreement_report(cfg: Config, ex: E.Explanations) -> pd.DataFrame:
         "gradient).",
         "",
         SCALE_NOTE,
+        "",
+        LIME_NOTE,
+        "This explains why LIME's sign agreement is highest with Saliency (both are slopes) and low with "
+        "the contribution-type methods.",
         "",
         "## Within MLP, k = 5 (mean over instances, ALL)",
         "",
@@ -441,8 +465,10 @@ def sanity_report(cfg: Config, root: Path, tolerance: float, run_info: dict) -> 
         "## Notes",
         "",
         "* IntegratedGradients approximates a path integral with 64 Gauss-Legendre nodes; the MLP's "
-        "ReLU kinks and the sigmoid make the integrand non-smooth, so a residual error is expected and "
-        "shrinks with more steps. It is reported, not corrected.",
+        "ReLU kinks and the sigmoid make the integrand non-smooth, so a residual error is expected. It shrinks "
+        "roughly as 1/steps: on the worst split (camel 1.2→1.4, seed 0) the 95th percentile is 1.35e-02, "
+        "3.30e-03, 8.47e-04 and 2.22e-04 with 16, 64, 256 and 1024 steps. The configured 64 steps were "
+        "kept; the error is reported, not corrected.",
         "* TreeSHAP for the random forests: shap's interventional algorithm stores split thresholds as "
         "float32 while scikit-learn compares float32 inputs with float64 thresholds; where rounding a "
         "threshold crosses a data value shap took the wrong branch (additivity errors up to 0.02 in the "
