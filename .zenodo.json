@@ -1,0 +1,27 @@
+{
+  "title": "Replication package: explainable software defect prediction (revision)",
+  "upload_type": "software",
+  "version": "1.0.0",
+  "description": "Code, configuration, data (CK metrics of 11 PROMISE/Jureczko projects with checksums), result summaries, reports and paper assets for the revision of a study on explainable software defect prediction: time-aware evaluation, explanations of MLP, LR, RF and XGBoost models with Captum, SHAP and LIME, and their agreement, robustness, fidelity and stability. See REPLICATION.md.",
+  "creators": [
+    {"name": "G S, Anantha Ram", "affiliation": "Amrita Vishwa Vidyapeetham, Coimbatore, India"},
+    {"name": "G, Ravindran", "affiliation": "Amrita Vishwa Vidyapeetham, Coimbatore, India"},
+    {"name": "B A, Sabarish", "affiliation": "Amrita Vishwa Vidyapeetham, Coimbatore, India"}
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "keywords": ["software defect prediction", "explainable artificial intelligence", "feature attribution", "SHAP", "LIME", "DeepLIFT", "explanation stability", "replication"],
+  "related_identifiers": [
+    {"identifier": "10.5281/zenodo.268436", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.268440", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.268442", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.268451", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.268458", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.268474", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.322436", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.322443", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.322449", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.322455", "relation": "references", "scheme": "doi"},
+    {"identifier": "10.5281/zenodo.322458", "relation": "references", "scheme": "doi"}
+  ]
+}

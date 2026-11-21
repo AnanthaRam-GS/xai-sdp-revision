@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this replication package, please cite it as below."
+type: software
+title: "Replication package: explainable software defect prediction (revision)"
+version: 1.0.0
+# date-released: fill in on release (YYYY-MM-DD)
+date-released: "YYYY-MM-DD"
+license: MIT
+authors:
+  - given-names: Anantha Ram
+    family-names: G S
+    affiliation: "Amrita Vishwa Vidyapeetham, Coimbatore, India"
+  - given-names: Ravindran
+    family-names: G
+    affiliation: "Amrita Vishwa Vidyapeetham, Coimbatore, India"
+  - given-names: Sabarish
+    family-names: B A
+    affiliation: "Amrita Vishwa Vidyapeetham, Coimbatore, India"
+keywords:
+  - software defect prediction
+  - explainable artificial intelligence
+  - feature attribution
+  - explanation stability
+  - replication
