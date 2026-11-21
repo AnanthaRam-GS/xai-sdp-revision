@@ -1,0 +1,21 @@
+% Suggested caption: NECM at cost ratios 1, 5 and 15 (mean [95% CI] over splits) and the break-even cost ratio below which a learned model beats All defective and ManualUp.
+% Source: reports/step8_cost_ratio.md
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Model & Threshold & $c = 1$ & $c = 5$ & $c = 15$ & Break-even $c$ \\
+\midrule
+MLP & MCC-tuned & 0.347\,{\scriptsize[0.306, 0.389]} & 0.931\,{\scriptsize[0.748, 1.151]} & 2.391\,{\scriptsize[1.789, 3.113]} & 3.35 \\
+MLP & cost-aware & 0.329\,{\scriptsize[0.277, 0.381]} & 0.745\,{\scriptsize[0.630, 0.895]} & 1.228\,{\scriptsize[0.924, 1.681]} & 4.15 \\
+LR & MCC-tuned & 0.342\,{\scriptsize[0.304, 0.381]} & 0.854\,{\scriptsize[0.696, 1.056]} & 2.132\,{\scriptsize[1.591, 2.794]} & 3.70 \\
+LR & cost-aware & 0.326\,{\scriptsize[0.275, 0.378]} & 0.708\,{\scriptsize[0.592, 0.860]} & 1.137\,{\scriptsize[0.858, 1.568]} & 4.55 \\
+RF & MCC-tuned & 0.351\,{\scriptsize[0.306, 0.397]} & 0.897\,{\scriptsize[0.701, 1.146]} & 2.262\,{\scriptsize[1.637, 3.097]} & 3.50 \\
+RF & cost-aware & 0.328\,{\scriptsize[0.271, 0.386]} & 0.792\,{\scriptsize[0.662, 0.965]} & 1.360\,{\scriptsize[0.997, 1.869]} & 3.90 \\
+XGB & MCC-tuned & 0.361\,{\scriptsize[0.315, 0.407]} & 0.957\,{\scriptsize[0.759, 1.210]} & 2.447\,{\scriptsize[1.786, 3.277]} & 3.20 \\
+XGB & cost-aware & 0.333\,{\scriptsize[0.274, 0.394]} & 0.785\,{\scriptsize[0.645, 0.982]} & 1.203\,{\scriptsize[0.903, 1.612]} & 3.95 \\
+ManualUp & MCC-tuned & 0.584\,{\scriptsize[0.504, 0.660]} & 0.932\,{\scriptsize[0.780, 1.096]} & 1.804\,{\scriptsize[1.247, 2.448]} & -- \\
+ManualDown & MCC-tuned & 0.335\,{\scriptsize[0.282, 0.397]} & 0.935\,{\scriptsize[0.704, 1.228]} & 2.436\,{\scriptsize[1.682, 3.350]} & -- \\
+All defective & MCC-tuned & 0.686\,{\scriptsize[0.605, 0.757]} & 0.686\,{\scriptsize[0.605, 0.757]} & 0.686\,{\scriptsize[0.605, 0.757]} & -- \\
+Majority & MCC-tuned & 0.686\,{\scriptsize[0.605, 0.757]} & 0.686\,{\scriptsize[0.605, 0.757]} & 0.686\,{\scriptsize[0.605, 0.757]} & -- \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,21 @@
+% Suggested caption: Explainer agreement for key pairs (seeds 0--2, mean over instances [95% CI]); DeepLift and DeepLiftShap share propagation rules.
+% Source: reports/step4_agreement.md
+\small
+\begin{tabular}{lrrr}
+\toprule
+Pair & FA@5 & SA@5 & Spearman \\
+\midrule
+MLP-DeepLift vs MLP-DeepLiftShap & 0.801\,{\scriptsize[0.799, 0.803]} & 0.801\,{\scriptsize[0.799, 0.803]} & 0.799\,{\scriptsize[0.797, 0.801]} \\
+MLP-DeepLiftShap vs MLP-KernelSHAP & 0.919\,{\scriptsize[0.917, 0.920]} & 0.919\,{\scriptsize[0.917, 0.920]} & 0.947\,{\scriptsize[0.946, 0.948]} \\
+MLP-DeepLift vs MLP-IntegratedGradients & 0.973\,{\scriptsize[0.972, 0.973]} & 0.973\,{\scriptsize[0.972, 0.973]} & 0.988\,{\scriptsize[0.988, 0.989]} \\
+MLP-DeepLiftShap vs MLP-LIME & 0.590\,{\scriptsize[0.587, 0.593]} & 0.277\,{\scriptsize[0.272, 0.281]} & 0.610\,{\scriptsize[0.607, 0.613]} \\
+MLP-DeepLiftShap vs MLP-Saliency & 0.554\,{\scriptsize[0.552, 0.557]} & 0.259\,{\scriptsize[0.255, 0.262]} & 0.525\,{\scriptsize[0.522, 0.529]} \\
+MLP-Saliency vs MLP-LIME & 0.795\,{\scriptsize[0.793, 0.798]} & 0.795\,{\scriptsize[0.793, 0.797]} & 0.823\,{\scriptsize[0.821, 0.826]} \\
+MLP-DeepLiftShap vs RF-TreeSHAP & 0.468\,{\scriptsize[0.465, 0.471]} & 0.450\,{\scriptsize[0.447, 0.453]} & 0.350\,{\scriptsize[0.346, 0.354]} \\
+MLP-DeepLiftShap vs LR-LinearSHAP & 0.592\,{\scriptsize[0.589, 0.595]} & 0.568\,{\scriptsize[0.565, 0.571]} & 0.558\,{\scriptsize[0.555, 0.560]} \\
+RF-TreeSHAP vs XGB-TreeSHAP & 0.659\,{\scriptsize[0.656, 0.662]} & 0.653\,{\scriptsize[0.650, 0.656]} & 0.659\,{\scriptsize[0.656, 0.661]} \\
+XGB-TreeSHAP vs LR-LinearSHAP & 0.425\,{\scriptsize[0.422, 0.428]} & 0.392\,{\scriptsize[0.389, 0.396]} & 0.281\,{\scriptsize[0.277, 0.285]} \\
+RF-LIME vs XGB-LIME & 0.683\,{\scriptsize[0.681, 0.686]} & 0.681\,{\scriptsize[0.678, 0.683]} & 0.671\,{\scriptsize[0.669, 0.674]} \\
+LR-LIME vs RF-LIME & 0.498\,{\scriptsize[0.494, 0.502]} & 0.483\,{\scriptsize[0.479, 0.487]} & 0.350\,{\scriptsize[0.344, 0.356]} \\
+\bottomrule
+\end{tabular}

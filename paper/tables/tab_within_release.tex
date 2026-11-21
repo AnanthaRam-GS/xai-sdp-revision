@@ -1,0 +1,18 @@
+% Suggested caption: Within-release performance (10 $\times$ 5-fold CV); mean [95% bootstrap CI]; superscripts: Scott-Knott ESD group.
+% Source: reports/step3_within_release.md
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Metric & MLP & LR & RF & XGB & ManualUp & ManualDown & All defective & Majority \\
+\midrule
+AUC & 0.770$^{1}$\,{\scriptsize[0.765, 0.774]} & 0.765$^{1}$\,{\scriptsize[0.761, 0.769]} & \textbf{0.778$^{1}$}\,{\scriptsize[0.773, 0.783]} & 0.761$^{1}$\,{\scriptsize[0.756, 0.765]} & 0.293$^{4}$\,{\scriptsize[0.286, 0.299]} & 0.707$^{2}$\,{\scriptsize[0.701, 0.713]} & 0.500$^{3}$\,{\scriptsize[0.500, 0.500]} & 0.500$^{3}$\,{\scriptsize[0.500, 0.500]} \\
+PR-AUC & 0.627\,{\scriptsize[0.617, 0.637]} & 0.618\,{\scriptsize[0.609, 0.628]} & \textbf{0.635}\,{\scriptsize[0.625, 0.645]} & 0.620\,{\scriptsize[0.610, 0.631]} & 0.287\,{\scriptsize[0.279, 0.296]} & 0.567\,{\scriptsize[0.558, 0.576]} & 0.338\,{\scriptsize[0.329, 0.348]} & 0.338\,{\scriptsize[0.329, 0.348]} \\
+MCC@tuned & 0.349$^{1}$\,{\scriptsize[0.339, 0.357]} & 0.337$^{1}$\,{\scriptsize[0.329, 0.345]} & \textbf{0.360$^{1}$}\,{\scriptsize[0.351, 0.369]} & 0.341$^{1}$\,{\scriptsize[0.332, 0.350]} & -0.107$^{4}$\,{\scriptsize[-0.115, -0.099]} & 0.260$^{2}$\,{\scriptsize[0.251, 0.269]} & 0.000$^{3}$\,{\scriptsize[0.000, 0.000]} & 0.000$^{3}$\,{\scriptsize[0.000, 0.000]} \\
+F1@tuned & 0.527\,{\scriptsize[0.516, 0.537]} & 0.523\,{\scriptsize[0.512, 0.532]} & \textbf{0.533}\,{\scriptsize[0.522, 0.544]} & 0.516\,{\scriptsize[0.505, 0.527]} & 0.353\,{\scriptsize[0.342, 0.365]} & 0.464\,{\scriptsize[0.454, 0.475]} & 0.475\,{\scriptsize[0.465, 0.485]} & 0.475\,{\scriptsize[0.465, 0.485]} \\
+Recall@tuned & 0.566\,{\scriptsize[0.552, 0.578]} & \textbf{0.572}\,{\scriptsize[0.560, 0.585]} & 0.571\,{\scriptsize[0.558, 0.583]} & 0.545\,{\scriptsize[0.532, 0.558]} & 0.690\,{\scriptsize[0.672, 0.708]} & 0.512\,{\scriptsize[0.498, 0.526]} & 1.000\,{\scriptsize[1.000, 1.000]} & 1.000\,{\scriptsize[1.000, 1.000]} \\
+Brier & 0.191\,{\scriptsize[0.190, 0.193]} & 0.203\,{\scriptsize[0.202, 0.204]} & \textbf{0.169}\,{\scriptsize[0.167, 0.171]} & 0.170\,{\scriptsize[0.168, 0.172]} & 0.350\,{\scriptsize[0.342, 0.358]} & 0.288\,{\scriptsize[0.280, 0.297]} & 0.662\,{\scriptsize[0.652, 0.671]} & 0.186\,{\scriptsize[0.183, 0.189]} \\
+Popt & 0.772$^{1}$\,{\scriptsize[0.765, 0.778]} & 0.767$^{1}$\,{\scriptsize[0.761, 0.775]} & \textbf{0.779$^{1}$}\,{\scriptsize[0.773, 0.786]} & 0.776$^{1}$\,{\scriptsize[0.769, 0.783]} & 0.753$^{1}$\,{\scriptsize[0.745, 0.760]} & 0.356$^{2}$\,{\scriptsize[0.348, 0.366]} & 0.753$^{1}$\,{\scriptsize[0.745, 0.760]} & 0.753$^{1}$\,{\scriptsize[0.745, 0.760]} \\
+Recall@20\%LOC & 0.475$^{1}$\,{\scriptsize[0.466, 0.484]} & 0.469$^{1}$\,{\scriptsize[0.460, 0.479]} & \textbf{0.480$^{1}$}\,{\scriptsize[0.471, 0.490]} & 0.475$^{1}$\,{\scriptsize[0.466, 0.484]} & 0.453$^{1}$\,{\scriptsize[0.443, 0.462]} & 0.090$^{2}$\,{\scriptsize[0.085, 0.096]} & 0.453$^{1}$\,{\scriptsize[0.443, 0.462]} & 0.453$^{1}$\,{\scriptsize[0.443, 0.462]} \\
+NECM15@tuned & 2.008$^{2}$\,{\scriptsize[1.946, 2.069]} & 2.021$^{2}$\,{\scriptsize[1.956, 2.088]} & \textbf{1.984$^{2}$}\,{\scriptsize[1.921, 2.048]} & 2.081$^{2}$\,{\scriptsize[2.019, 2.143]} & 2.121$^{2}$\,{\scriptsize[2.016, 2.229]} & 2.358$^{2}$\,{\scriptsize[2.271, 2.441]} & 0.662$^{1}$\,{\scriptsize[0.652, 0.671]} & 0.662$^{1}$\,{\scriptsize[0.652, 0.671]} \\
+\bottomrule
+\end{tabular}

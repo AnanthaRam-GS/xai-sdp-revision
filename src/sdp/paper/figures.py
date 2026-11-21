@@ -389,8 +389,12 @@ def fig_stability(reports: Path, data: Path, out: Path) -> list[Path]:
         except KeyError:
             return np.nan
 
-    sources = [("explainer randomness", lambda e: np.nanmax([val("LIME random state (step 5)", "instance", e),
-                                                             val("background draw (step 5)", "instance", e)]), S.OKABE_ITO["sky"]),
+    def explainer_randomness(e):
+        v = [x for x in (val("LIME random state (step 5)", "instance", e), val("background draw (step 5)", "instance", e))
+             if np.isfinite(x)]
+        return max(v) if v else np.nan
+
+    sources = [("explainer randomness", explainer_randomness, S.OKABE_ITO["sky"]),
                ("training seed", lambda e: val("training seed", "global", e), S.OKABE_ITO["green"]),
                ("release", lambda e: val("release (consecutive splits)", "global", e), S.OKABE_ITO["orange"]),
                ("project", lambda e: val("project", "global", e), S.OKABE_ITO["purple"])]  # fmt: skip

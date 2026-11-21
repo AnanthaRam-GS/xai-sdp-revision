@@ -43,6 +43,28 @@ def _metric_frame(path: Path) -> pd.DataFrame:
     return m
 
 
+def runtime_totals(res: Path) -> pd.DataFrame:
+    """Wall-clock hours per step from the run information files (10 workers)."""
+    import json
+
+    def load(p):
+        p = res / p
+        return json.loads(p.read_text()) if p.exists() else {}
+
+    rows = []
+    step3 = sum(load(f"{e}/run_info.json").get("wall_time_s", 0.0) for e in (
+        "main_time_aware", "main_within_release", "ablation_preprocessing", "ablation_imbalance", "main_time_aware_cumulative"))
+    rows.append({"step": "step3_experiments", "wall_hours": step3 / 3600})
+    rows.append({"step": "step4_explanations_v1", "wall_hours": load("explanations/v1/run_info_full.json").get("wall_time_s", 0.0) / 3600})
+    rows.append({"step": "step4_explanations_v2", "wall_hours": load("explanations/run_info_full.json").get("wall_time_s", 0.0) / 3600})
+    rows.append({"step": "step5_robustness", "wall_hours": sum(load("robustness/run_info.json").get("wall_time_s", {}).values()) / 3600})
+    rows.append({"step": "step6_fidelity", "wall_hours": sum(load("fidelity/run_info.json").get("wall_time_s", {}).values()) / 3600})
+    rows.append({"step": "step7_stability", "wall_hours": (load("stability/run_info.json").get("wall_time_s", 0.0)
+                                                           + load("stability/permuted_run_info.json").get("wall_time_s", 0.0)) / 3600})
+    t = pd.DataFrame(rows)
+    return pd.concat([t, pd.DataFrame([{"step": "total", "wall_hours": t["wall_hours"].sum()}])], ignore_index=True)
+
+
 def collect(cfg: Config, out: Path, fidelity_root: Path | None = None) -> list[Path]:
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -75,6 +97,10 @@ def collect(cfg: Config, out: Path, fidelity_root: Path | None = None) -> list[P
         c.groupby(["model", "method", "kind", "k"], as_index=False)["value"].mean().to_csv(out / "deletion_curves.csv", index=False)
         written.append(out / "deletion_curves.csv")
 
+    rt = runtime_totals(res)
+    if len(rt):
+        rt.to_csv(out / "runtime_totals.csv", index=False)
+        written.append(out / "runtime_totals.csv")
     clusters = res / "stability" / "clusters.json"
     if clusters.exists():
         (out / "stable_clusters.json").write_text(clusters.read_text(encoding="utf-8"), encoding="utf-8")

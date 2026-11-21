@@ -1,0 +1,18 @@
+% Suggested caption: RQ1: time-aware performance (24 splits $\times$ 10 seeds); mean [95% bootstrap CI]; superscripts: Scott-Knott ESD group (1 = best); bold: best learned model.
+% Source: reports/step3_main_time_aware.md
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Metric & MLP & LR & RF & XGB & ManualUp & ManualDown & All defective & Majority \\
+\midrule
+AUC & 0.686$^{1}$\,{\scriptsize[0.673, 0.698]} & \textbf{0.687$^{1}$}\,{\scriptsize[0.673, 0.700]} & 0.676$^{1}$\,{\scriptsize[0.661, 0.691]} & 0.675$^{1}$\,{\scriptsize[0.661, 0.689]} & 0.285$^{3}$\,{\scriptsize[0.252, 0.320]} & 0.715$^{1}$\,{\scriptsize[0.680, 0.748]} & 0.500$^{2}$\,{\scriptsize[0.500, 0.500]} & 0.500$^{2}$\,{\scriptsize[0.500, 0.500]} \\
+PR-AUC & \textbf{0.517}\,{\scriptsize[0.494, 0.538]} & 0.517\,{\scriptsize[0.493, 0.540]} & 0.486\,{\scriptsize[0.463, 0.508]} & 0.487\,{\scriptsize[0.466, 0.509]} & 0.239\,{\scriptsize[0.177, 0.306]} & 0.514\,{\scriptsize[0.439, 0.593]} & 0.314\,{\scriptsize[0.241, 0.393]} & 0.314\,{\scriptsize[0.241, 0.393]} \\
+MCC@tuned & 0.234$^{1}$\,{\scriptsize[0.215, 0.251]} & 0.240$^{1}$\,{\scriptsize[0.221, 0.257]} & \textbf{0.247$^{1}$}\,{\scriptsize[0.229, 0.263]} & 0.228$^{1}$\,{\scriptsize[0.212, 0.244]} & -0.127$^{3}$\,{\scriptsize[-0.169, -0.087]} & 0.257$^{1}$\,{\scriptsize[0.202, 0.314]} & 0.000$^{2}$\,{\scriptsize[0.000, 0.000]} & 0.000$^{2}$\,{\scriptsize[0.000, 0.000]} \\
+F1@tuned & 0.445\,{\scriptsize[0.423, 0.467]} & \textbf{0.464}\,{\scriptsize[0.442, 0.486]} & 0.461\,{\scriptsize[0.440, 0.482]} & 0.434\,{\scriptsize[0.413, 0.455]} & 0.346\,{\scriptsize[0.251, 0.448]} & 0.440\,{\scriptsize[0.366, 0.518]} & 0.449\,{\scriptsize[0.369, 0.535]} & 0.449\,{\scriptsize[0.369, 0.535]} \\
+Recall@tuned & 0.550\,{\scriptsize[0.520, 0.580]} & \textbf{0.590}\,{\scriptsize[0.561, 0.618]} & 0.586\,{\scriptsize[0.558, 0.616]} & 0.553\,{\scriptsize[0.522, 0.585]} & 0.656\,{\scriptsize[0.501, 0.793]} & 0.544\,{\scriptsize[0.432, 0.641]} & 1.000\,{\scriptsize[1.000, 1.000]} & 1.000\,{\scriptsize[1.000, 1.000]} \\
+Brier & 0.236\,{\scriptsize[0.229, 0.242]} & \textbf{0.232}\,{\scriptsize[0.227, 0.238]} & 0.235\,{\scriptsize[0.227, 0.245]} & 0.234\,{\scriptsize[0.225, 0.244]} & 0.330\,{\scriptsize[0.261, 0.403]} & 0.269\,{\scriptsize[0.203, 0.342]} & 0.686\,{\scriptsize[0.607, 0.759]} & 0.230\,{\scriptsize[0.198, 0.265]} \\
+Popt & 0.769$^{1}$\,{\scriptsize[0.755, 0.782]} & \textbf{0.770$^{1}$}\,{\scriptsize[0.756, 0.783]} & 0.741$^{1}$\,{\scriptsize[0.725, 0.757]} & 0.740$^{1}$\,{\scriptsize[0.725, 0.756]} & 0.768$^{1}$\,{\scriptsize[0.722, 0.813]} & 0.345$^{2}$\,{\scriptsize[0.304, 0.384]} & 0.768$^{1}$\,{\scriptsize[0.722, 0.813]} & 0.768$^{1}$\,{\scriptsize[0.723, 0.813]} \\
+Recall@20\%LOC & \textbf{0.471$^{1}$}\,{\scriptsize[0.452, 0.490]} & 0.466$^{1}$\,{\scriptsize[0.448, 0.484]} & 0.449$^{1}$\,{\scriptsize[0.430, 0.468]} & 0.444$^{1}$\,{\scriptsize[0.425, 0.464]} & 0.472$^{1}$\,{\scriptsize[0.411, 0.529]} & 0.088$^{2}$\,{\scriptsize[0.064, 0.114]} & 0.472$^{1}$\,{\scriptsize[0.411, 0.529]} & 0.472$^{1}$\,{\scriptsize[0.414, 0.528]} \\
+NECM15@tuned & 2.391$^{2}$\,{\scriptsize[2.176, 2.631]} & \textbf{2.132$^{2}$}\,{\scriptsize[1.918, 2.341]} & 2.262$^{2}$\,{\scriptsize[2.035, 2.505]} & 2.447$^{2}$\,{\scriptsize[2.206, 2.684]} & 1.804$^{2}$\,{\scriptsize[1.250, 2.460]} & 2.436$^{2}$\,{\scriptsize[1.708, 3.318]} & 0.686$^{1}$\,{\scriptsize[0.607, 0.759]} & 0.686$^{1}$\,{\scriptsize[0.607, 0.759]} \\
+\bottomrule
+\end{tabular}

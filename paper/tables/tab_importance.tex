@@ -1,0 +1,17 @@
+% Suggested caption: Global importance (all test instances, ALL splits) for the primary explanations: top-5 metrics, share of attribution on LOC and on the size group, and % of instances with LOC as the top metric.
+% Source: reports/step4_global_importance.md, reports/step4_size_share.md
+\small
+\begin{tabular}{lp{7.2cm}rrr}
+\toprule
+Explanation & Top-5 metrics (mean normalised |attribution|) & LOC share & Size share & LOC top-1 (\%) \\
+\midrule
+MLP-DeepLiftShap & CE (0.062), RFC (0.061), DAM (0.060), LOC (0.060), DIT (0.056) & 0.060 & 0.220 & 6.50 \\
+MLP-KernelSHAP & CE (0.065), DAM (0.065), RFC (0.063), LOC (0.061), MFA (0.056) & 0.061 & 0.219 & 7.40 \\
+MLP-IntegratedGradients & DAM (0.062), CE (0.060), MFA (0.060), DIT (0.058), RFC (0.056) & 0.055 & 0.204 & 5.48 \\
+MLP-LIME & RFC (0.065), LOC (0.064), CE (0.064), CAM (0.055), CBO (0.054) & 0.064 & 0.232 & 10.68 \\
+MLP-Saliency & RFC (0.061), CE (0.061), LOC (0.060), CBO (0.054), AMC (0.053) & 0.060 & 0.224 & 8.20 \\
+LR-LinearSHAP & LOC (0.068), RFC (0.067), CE (0.062), DAM (0.058), CBO (0.056) & 0.068 & 0.241 & 9.17 \\
+RF-TreeSHAP & LOC (0.106), RFC (0.098), CAM (0.071), AMC (0.068), CE (0.066) & 0.106 & 0.317 & 18.23 \\
+XGB-TreeSHAP & LOC (0.100), RFC (0.095), CAM (0.079), AMC (0.072), CE (0.067) & 0.100 & 0.295 & 13.77 \\
+\bottomrule
+\end{tabular}

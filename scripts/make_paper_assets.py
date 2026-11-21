@@ -19,7 +19,7 @@ import yaml
 
 from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.log import setup_logging
-from sdp.paper import collect, figures
+from sdp.paper import collect, figures, numbers, tables
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -39,7 +39,13 @@ def main(argv: list[str] | None = None) -> int:
         fs = yaml.safe_load((REPO_ROOT / "configs" / "fidelity.yaml").read_text(encoding="utf-8"))
         collect.collect(cfg, data, Path(cfg.paths.artifacts_dir) / fs.get("output_dir", "fidelity"))
     figures.make_all(reports, data, out / "figures")
-    return 0
+    tables.make_all(reports, data, out / "tables")
+    root = REPO_ROOT if reports.resolve().parent == REPO_ROOT.resolve() else reports.resolve().parent
+    numbers.write_numbers(root, out / "numbers.tex")
+    problems = numbers.check_numbers(root, out / "numbers.tex")
+    for p in problems:
+        print(p)
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":
