@@ -12,13 +12,14 @@ methods:
   rf: [TreeSHAP, LIME]
   xgb: [TreeSHAP, LIME]
 seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-expensive_methods: [LIME, KernelSHAP]   # run on expensive_seeds only (cost)
+expensive_methods: [LIME, LIME_mean_sampling, KernelSHAP]   # run on expensive_seeds only (cost)
 expensive_seeds: [0, 1, 2]
 background_size: 100
 params:
   GradientShap: {n_samples: 50, stdevs: 0.0}
-  IntegratedGradients: {n_steps: 64, method: gausslegendre}
-  LIME: {num_samples: 5000, num_features: 20}
+  IntegratedGradients: {n_steps: 512, method: gausslegendre}
+  LIME: {num_samples: 5000, num_features: 20, sample_around_instance: true}
+  LIME_mean_sampling: {num_samples: 5000, num_features: 20, sample_around_instance: false}   # step 4 v1 (kept, not rerun)
   KernelSHAP: {nsamples: 1000, l1_reg: false}
 reduced_params:             # used if the estimated runtime exceeds max_hours
   LIME: {num_samples: 2000}

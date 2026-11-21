@@ -9,7 +9,8 @@ about 1e-7.
 * DeepLift: baseline = background mean.
 * DeepLiftShap: baselines = the background set (attributions averaged over it).
 * GradientShap: baselines = the background set, ``n_samples=50``, ``stdevs=0.0``.
-* IntegratedGradients: baseline = background mean, ``n_steps=64``, Gauss-Legendre.
+* IntegratedGradients: baseline = background mean, ``n_steps=512`` (64 in step 4 v1, whose
+  completeness errors exceeded 1e-3), Gauss-Legendre.
 * Saliency: the raw (signed) gradient (``abs=False``); |gradient| is derived later.
 * InputXGradient: input × gradient.
 
@@ -142,7 +143,7 @@ class IntegratedGradientsExplainer(CaptumExplainer):
 
     def _call(self, method, x, ctx, bg):
         return method.attribute(x, baselines=bg.mean(dim=0, keepdim=True), target=0,
-                                n_steps=int(self.params.get("n_steps", 64)),
+                                n_steps=int(self.params.get("n_steps", 512)),
                                 method=str(self.params.get("method", "gausslegendre")))  # fmt: skip
 
 

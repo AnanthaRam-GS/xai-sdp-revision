@@ -33,6 +33,12 @@ def test_completeness_on_tiny_model(ctx, name):
     assert chk["error"].quantile(0.95) < tol
 
 
+def test_integrated_gradients_default_is_512_steps_and_converges(ctx):
+    e512 = cm.IntegratedGradientsExplainer().explain(ctx).checks["error"]
+    e16 = cm.IntegratedGradientsExplainer(n_steps=16).explain(ctx).checks["error"]
+    assert e512.quantile(0.95) <= 1e-3 and e512.max() <= e16.max()
+
+
 def test_deeplift_reference_is_background_mean(ctx):
     res = cm.DeepLiftExplainer().explain(ctx)
     module = cm.probability_module(ctx)

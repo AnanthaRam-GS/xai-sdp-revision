@@ -228,6 +228,27 @@ def write_long(frame: pd.DataFrame, path: Path) -> None:
     tmp.replace(path)
 
 
+def rename_method(root: Path, old: str, new: str) -> list[Path]:
+    """Move every ``<model>/<old>/`` partition of the store to ``<model>/<new>/`` and
+    rewrite its ``method`` column, so earlier results are kept under a new name."""
+    moved = []
+    for src_dir in sorted(Path(root).glob(f"*/{old}")):
+        if src_dir.parent.name.startswith("_"):
+            continue
+        dst_dir = src_dir.parent / new
+        if dst_dir.exists():
+            raise FileExistsError(f"{dst_dir} exists already; refusing to overwrite")
+        dst_dir.mkdir(parents=True)
+        for f in sorted(src_dir.glob("*.parquet")):
+            frame = pd.read_parquet(f)
+            frame["method"] = new
+            write_long(frame, dst_dir / f.name)
+            f.unlink()
+            moved.append(dst_dir / f.name)
+        src_dir.rmdir()
+    return moved
+
+
 def read_attributions(root: Path, models=None, methods=None, columns=None, seeds=None) -> pd.DataFrame:
     """Read (a subset of) the attribution store; string columns become categoricals."""
     root = Path(root)

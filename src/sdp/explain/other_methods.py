@@ -1,10 +1,15 @@
 """Model-agnostic (LIME, KernelSHAP) and model-specific (TreeSHAP, linear SHAP) explainers.
 
 * **LIME** (all models): ``LimeTabularExplainer`` in model input space,
-  ``mode="classification"``, ``discretize_continuous=False``, default kernel width,
+  ``mode="classification"``, ``discretize_continuous=False``,
+  ``sample_around_instance=True`` (perturbations are drawn around the explained
+  instance, scaled by the training standard deviations), default kernel width,
   ``num_samples=5000``, ``num_features=20``, ``random_state`` = model seed, explaining
   P(defective). Weights are mapped to features through ``explanation.as_map()[1]``
-  (feature index → weight), never by list order.
+  (feature index → weight), never by list order. The weights are the coefficients
+  (slopes) of the local surrogate. ``LIME_mean_sampling`` is the step 4 (v1) setting,
+  ``sample_around_instance=False``, which samples around the training mean and
+  therefore gives almost the same weights for every instance.
 * **KernelSHAP** (MLP only): ``shap.KernelExplainer`` on P(defective) with the
   background set, ``nsamples=1000``. ``l1_reg=False``: no lasso feature selection, so
   that all 20 features get an attribution (shap's default since 0.47 keeps only 10).
@@ -38,29 +43,49 @@ logger = logging.getLogger(__name__)
 
 
 class LimeExplainer(Explainer):
+    """LIME; parameters (all optional): ``num_samples``, ``num_features``,
+    ``sample_around_instance`` (default True), ``discretize_continuous`` (default False),
+    ``kernel_width`` (default: LIME's 0.75 × sqrt(n_features)) and ``random_state``
+    (default: the model seed). The local surrogate's R² (``explanation.score``) of the
+    last call is kept in ``scores_``."""
+
     name = "LIME"
     models = ("mlp", "lr", "rf", "xgb")
+    default_sample_around_instance = True
 
     def _attribute(self, ctx: ExplainContext):
         from lime.lime_tabular import LimeTabularExplainer
 
         feats = ctx.feature_names
+        p = self.params
         explainer = LimeTabularExplainer(
             training_data=ctx.X_train.to_numpy(dtype="float64"),
             feature_names=feats,
             class_names=["clean", "defective"],
             mode="classification",
-            discretize_continuous=False,
-            random_state=ctx.seed,
+            discretize_continuous=bool(p.get("discretize_continuous", False)),
+            sample_around_instance=bool(p.get("sample_around_instance", self.default_sample_around_instance)),
+            kernel_width=p.get("kernel_width"),
+            random_state=int(p.get("random_state", ctx.seed)),
         )
-        num_features = int(self.params.get("num_features", len(feats)))
-        num_samples = int(self.params.get("num_samples", 5000))
+        num_features = int(p.get("num_features", len(feats)))
+        num_samples = int(p.get("num_samples", 5000))
         out = np.zeros((len(ctx.X_test), len(feats)))
+        scores = np.zeros(len(ctx.X_test))
         for i, row in enumerate(ctx.X_test.to_numpy(dtype="float64")):
             exp = explainer.explain_instance(row, ctx.predict_proba, labels=(1,), num_features=num_features,
                                              num_samples=num_samples)  # fmt: skip
             out[i] = lime_weights(exp, len(feats))
+            scores[i] = float(np.atleast_1d(exp.score)[0]) if not isinstance(exp.score, dict) else exp.score[1]
+        self.scores_ = scores
         return pd.DataFrame(out, columns=feats), None
+
+
+class LimeMeanSamplingExplainer(LimeExplainer):
+    """The step 4 (v1) LIME setting: perturbations around the training mean."""
+
+    name = "LIME_mean_sampling"
+    default_sample_around_instance = False
 
 
 def lime_weights(explanation, n_features: int, label: int = 1) -> np.ndarray:
@@ -165,4 +190,7 @@ class LinearShapExplainer(Explainer):
         return values, checks
 
 
-OTHER_EXPLAINERS = {cls.name: cls for cls in (LimeExplainer, KernelShapExplainer, TreeShapExplainer, LinearShapExplainer)}
+OTHER_EXPLAINERS = {
+    cls.name: cls
+    for cls in (LimeExplainer, LimeMeanSamplingExplainer, KernelShapExplainer, TreeShapExplainer, LinearShapExplainer)
+}
