@@ -1,0 +1,29 @@
+# Step 4: explanations of the persisted time-aware models.
+experiment: main_time_aware
+imbalance: class_weight
+models:                     # model -> preprocessing it was trained with
+  mlp: log_standard
+  lr: log_standard
+  rf: standard
+  xgb: standard
+methods:
+  mlp: [DeepLift, DeepLiftShap, GradientShap, IntegratedGradients, Saliency, InputXGradient, LIME, KernelSHAP]
+  lr: [LinearSHAP, LIME]
+  rf: [TreeSHAP, LIME]
+  xgb: [TreeSHAP, LIME]
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+expensive_methods: [LIME, KernelSHAP]   # run on expensive_seeds only (cost)
+expensive_seeds: [0, 1, 2]
+background_size: 100
+params:
+  GradientShap: {n_samples: 50, stdevs: 0.0}
+  IntegratedGradients: {n_steps: 64, method: gausslegendre}
+  LIME: {num_samples: 5000, num_features: 20}
+  KernelSHAP: {nsamples: 1000, l1_reg: false}
+reduced_params:             # used if the estimated runtime exceeds max_hours
+  LIME: {num_samples: 2000}
+  KernelSHAP: {nsamples: 500}
+max_hours: 8
+completeness_tolerance: 1.0e-3   # 95th percentile of |sum(attr) - (f(x) - f(ref))|
+n_jobs: 10
+output_dir: attributions         # under the artifacts directory
