@@ -239,3 +239,54 @@ def line_panels(panels: dict[str, pd.DataFrame], title: str, xlabel: str, ylabel
     fig.legend(handles, labels, loc="lower center", ncol=min(5, len(labels)), frameon=False, bbox_to_anchor=(0.5, 0.0))
     _save(fig, path)
     return fig, axes
+
+
+def point_ci(table: pd.DataFrame, title: str, xlabel: str, band: tuple[float, float] | None = None,
+             band_label: str = "", reference_label: str = "", path: Path | None = None):  # fmt: skip
+    """Horizontal points with CIs, one row per ``table.index`` label (columns ``mean``,
+    ``low``, ``high``, optional ``reference``); an optional shaded reference band."""
+    labels = [str(i) for i in table.index][::-1]
+    t = table.iloc[::-1]
+    y = np.arange(len(labels))
+    fig, ax = plt.subplots(figsize=(5.6, 0.3 * len(labels) + 1.2))
+    if band is not None:
+        ax.axvspan(band[0], band[1], color="#e4e3df", label=band_label, zorder=0)
+    ax.errorbar(t["mean"], y, xerr=[t["mean"] - t["low"], t["high"] - t["mean"]], fmt="o", color=SERIES[0],
+                ecolor=SERIES[0], markersize=4, capsize=2, label="mean over comparisons (95% CI)")  # fmt: skip
+    if "reference" in t and t["reference"].notna().any():
+        ax.plot(t["reference"], y, "D", color=SERIES[1], markersize=3.5, label=reference_label)
+    ax.set_yticks(y, labels=labels)
+    ax.set_xlabel(xlabel)
+    ax.grid(axis="x", color="#e4e3df", linewidth=0.6)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    ax.legend(frameon=False, fontsize=6, loc="lower left")
+    ax.set_title(title, loc="left", color=INK)
+    _save(fig, path)
+    return fig, ax
+
+
+def scatter_panels(panels: dict[str, tuple], title: str, path: Path | None = None, ncols: int = 4):
+    """One scatter per key: value = (x, y, xlabel, ylabel); Spearman ρ in each panel title."""
+    from scipy.stats import spearmanr
+
+    keys = list(panels)
+    nrows = int(np.ceil(len(keys) / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(3.0 * ncols, 2.7 * nrows + 0.4), squeeze=False)
+    for ax, key in zip(axes.flat, keys):
+        x, y, xl, yl = panels[key]
+        ok = np.isfinite(x) & np.isfinite(y)
+        ax.scatter(x[ok], y[ok], s=14, color=SERIES[0], edgecolor=SURFACE, linewidth=0.5)
+        rho = spearmanr(x[ok], y[ok])[0] if ok.sum() > 2 else np.nan
+        ax.set_title(f"ρ = {rho:+.2f} (n = {ok.sum()})", color=INK, fontsize=8)
+        ax.set_xlabel(xl)
+        ax.set_ylabel(yl)
+        ax.grid(color="#e4e3df", linewidth=0.6)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+    for ax in axes.flat[len(keys):]:
+        ax.set_visible(False)
+    fig.suptitle(title, x=0.01, ha="left", color=INK, fontsize=9)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    _save(fig, path)
+    return fig, axes

@@ -1,0 +1,15 @@
+project,comparison,release_a,release_b,matched,matched_exact_name,matched_via_mapping,unchanged,unchanged_via_mapping
+ant,ant 1.3>1.4 vs 1.4>1.5,1.4,1.5,163,163,0,23,0
+ant,ant 1.4>1.5 vs 1.5>1.6,1.5,1.6,288,288,0,60,0
+ant,ant 1.5>1.6 vs 1.6>1.7,1.6,1.7,344,344,0,44,0
+camel,camel 1.2>1.4 vs 1.4>1.6,1.4,1.6,762,762,0,235,0
+ivy,ivy 1.1>1.4 vs 1.4>2.0,1.4,2.0,47,0,47,1,1
+jedit,jedit 3.2>4.0 vs 4.0>4.1,4.0,4.1,284,284,0,63,0
+jedit,jedit 4.0>4.1 vs 4.1>4.2,4.1,4.2,284,284,0,55,0
+lucene,lucene 2.0>2.2 vs 2.2>2.4,2.2,2.4,227,227,0,26,0
+poi,poi 1.5>2.0 vs 2.0>2.5,2.0,2.5,269,269,0,84,0
+poi,poi 2.0>2.5 vs 2.5>3.0,2.5,3.0,334,334,0,50,0
+synapse,synapse 1.0>1.1 vs 1.1>1.2,1.1,1.2,207,207,0,48,0
+velocity,velocity 1.4>1.5 vs 1.5>1.6,1.5,1.6,183,183,0,41,0
+xalan,xalan 2.4>2.5 vs 2.5>2.6,2.5,2.6,685,685,0,241,0
+xerces,xerces init>1.2 vs 1.2>1.3,1.2,1.3,330,330,0,192,0

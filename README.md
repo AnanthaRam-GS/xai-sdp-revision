@@ -244,6 +244,26 @@ python -m scripts.make_step6_reports
 
 Outputs under `artifacts/fidelity/`; reports `reports/step6_deletion_insertion.md`, `step6_faithfulness.md`, `step6_roar_kar.md`, `step6_sanity_checks.md`, `step6_summary.md` and `step6_runtime.md` (with CSVs) and figures in `reports/figures/step6/`.
 
+## Step 7: stability of explanations and data drift
+
+Measures how stable the step 4 (v2) explanations are across releases, training seeds and projects, and relates this to data drift (`src/sdp/stability/`). No model is retrained, except for the one-off refit of the step 6 permuted-label models that provides the data-only reference.
+
+- **Global importance** g = mean L1-normalised |attribution| over a split's test instances (seeds averaged per split). Stability metrics between two vectors (`reference.py`): Spearman, Kendall τ-b, top-5/top-3 Jaccard and rank-biased overlap (p = 0.9). References: a random null (10,000 random ranking pairs), a **data-only reference** from the permuted-label models, and 95% CIs from resampling the test instances.
+- **Permuted-label models** (`permuted.py`, `scripts/refit_permuted.py`): the 96 seed-0 step 6 data-randomisation models refitted with the same permutation and persisted hyperparameters, saved under `artifacts/models/permuted_labels/`, with explanations under `artifacts/attributions/_permuted/` (`subset="permuted_labels"`). The refit reproduces the step 6 AUCs and similarities exactly (`results/stability/permuted_reproduction.csv`).
+- **Cross-version** (`versions.py`): the 14 consecutive-split comparisons, top-5 frequency (corrected Table 2), direction stability and the same at the level of the step 5 stable clusters.
+- **Unchanged classes** (`unchanged.py`): classes with identical metrics and label in consecutive test releases (ivy matched after mapping `fr.jayasoft.ivy.` → `org.apache.ivy.`), compared across versions and against the seed-noise floor.
+- **Seeds** (`seeds.py`): pairwise seed stability (global and instance level) and prediction multiplicity.
+- **Projects and drift** (`projects.py`, `drift.py`): 10 × 10 cross-project matrices; KS statistics, defective-ratio change and a classifier two-sample test (folds grouped by class name), related to test AUC and explanation stability (Spearman, Holm).
+
+```bash
+python -m scripts.refit_permuted          # one-off: permuted-label models and explanations
+python -m scripts.run_stability --projects ant   # smoke test
+python -m scripts.run_stability           # all analyses -> results/stability/
+python -m scripts.make_step7_reports
+```
+
+Reports: `reports/step7_cross_version.md`, `step7_topk_frequency.md`, `step7_unchanged_classes.md`, `step7_seed_stability.md`, `step7_cross_project.md`, `step7_drift.md`, `step7_summary.md` and `step7_runtime.md` (with CSVs); figures in `reports/figures/step7/`.
+
 ## Layout
 
 ```
@@ -262,7 +282,8 @@ src/sdp/experiments/       step 2 runner, step 3 engine, configs, persistence
 src/sdp/explain/           explainers, background sets, attribution store, runner (step 4)
 src/sdp/robustness/        step 5 studies (LIME, background, preprocessing, collinearity)
 src/sdp/fidelity/          step 6 fidelity tests (removal, curves, faithfulness, ROAR/KAR, sanity checks)
-src/sdp/analysis/          step 3–6 aggregation, reports and figures
+src/sdp/stability/         step 7 stability and drift analyses
+src/sdp/analysis/          step 3–7 aggregation, reports and figures
 configs/experiments/       experiment definitions
 scripts/prepare_data.py    data preparation entry point
 scripts/run_baselines.py   baseline experiments entry point (step 2)
@@ -276,6 +297,9 @@ scripts/run_robustness.py      step 5 studies (smoke test, estimate, full run)
 scripts/make_step5_reports.py  step 5 reports and figures
 scripts/run_fidelity.py        step 6 fidelity tests (smoke test, estimate, full run)
 scripts/make_step6_reports.py  step 6 reports and figures
+scripts/refit_permuted.py      step 7 permuted-label refit (data-only reference)
+scripts/run_stability.py       step 7 analyses
+scripts/make_step7_reports.py  step 7 reports and figures
 configs/fidelity.yaml      step 6 settings
 tests/                     pytest suite
 ```
@@ -285,12 +309,15 @@ tests/                     pytest suite
 - Jureczko, M., & Madeyski, L. (2010). Towards identifying software project clusters with regard to defect prediction. *PROMISE '10*.
 - Adebayo, J., Gilmer, J., Muelly, M., Goodfellow, I., Hardt, M., & Kim, B. (2018). Sanity checks for saliency maps. *NeurIPS 2018*.
 - Bhatt, U., Weller, A., & Moura, J. M. F. (2020). Evaluating and aggregating feature-based model explanations. *IJCAI 2020*, 3016–3022.
+- Friedman, J. H. (2004). On multivariate goodness-of-fit and two-sample testing. *SLAC-PUB-10325*.
 - Herbold, S. (2018). Benchmarking cross-project defect prediction approaches with costs metrics. arXiv:1801.04107.
 - Hooker, S., Erhan, D., Kindermans, P.-J., & Kim, B. (2019). A benchmark for interpretability methods in deep neural networks. *NeurIPS 2019*.
 - Jiarpakdee, J., Tantithamthavorn, C., & Treude, C. (2018). AutoSpearman: Automatically mitigating correlated software metrics for interpreting defect models. *ICSME 2018*, 92–103.
 - Krishna, S., Han, T., Gu, A., Pombra, J., Jabbari, S., Wu, S., & Lakkaraju, H. (2022). The disagreement problem in explainable machine learning: A practitioner's perspective. arXiv:2202.01602.
+- Lopez-Paz, D., & Oquab, M. (2017). Revisiting classifier two-sample tests. *ICLR 2017*.
 - Mende, T., & Koschke, R. (2010). Effort-aware defect prediction models. *CSMR 2010*, 107–116.
 - Romano, J., Kromrey, J. D., Coraggio, J., & Skowronek, J. (2006). Appropriate statistics for ordinal level data. *Florida Association of Institutional Research*.
 - Scott, A. J., & Knott, M. (1974). A cluster analysis method for grouping means in the analysis of variance. *Biometrics*, 30(3), 507–512.
 - Sun, Z., Li, J., Sun, H., & He, L. (2018). An empirical study of public data quality problems in cross project defect prediction. arXiv:1805.10787.
+- Webber, W., Moffat, A., & Zobel, J. (2010). A similarity measure for indefinite rankings. *ACM TOIS*, 28(4), 20.
 - Tantithamthavorn, C., McIntosh, S., Hassan, A. E., & Matsumoto, K. (2017). An empirical comparison of model validation techniques for defect prediction models. *IEEE TSE*, 43(1), 1–18.
