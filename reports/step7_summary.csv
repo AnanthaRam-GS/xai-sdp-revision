@@ -1,0 +1,7 @@
+quantity,value
+cross-version Spearman (MLP-DeepLiftShap / RF-TreeSHAP),0.16 / 0.51
+data-only reference (permuted labels),0.09 / 0.39
+random null: mean / 95th percentile,0.00 / 0.37
+"seed stability, global Spearman (MLP-DeepLiftShap / RF-TreeSHAP)",0.58 / 0.92
+cross-project Spearman (MLP-DeepLiftShap / RF-TreeSHAP),0.09 / 0.46
+test instances whose label changes between seeds (MLP / LR / RF / XGB),35.3% / 23.7% / 26.2% / 33.2%

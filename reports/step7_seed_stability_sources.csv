@@ -1,0 +1,8 @@
+source,level,MLP-DeepLiftShap,MLP-KernelSHAP,MLP-IntegratedGradients,MLP-LIME,MLP-Saliency,LR-LinearSHAP,RF-TreeSHAP,XGB-TreeSHAP
+training seed,global,0.577,0.612,0.544,0.570,0.527,0.792,0.923,0.833
+training seed,instance,0.601,0.639,0.597,0.491,0.365,0.824,0.806,0.727
+LIME random state (step 5),instance,,,,0.991,,,,
+background draw (step 5),instance,0.963,,,,,,0.972,0.974
+release (consecutive splits),global,0.162,0.158,0.171,0.046,0.038,0.271,0.512,0.521
+project,global,0.087,0.073,0.082,0.055,0.072,0.065,0.456,0.377
+random null (95th pct),global,0.373,0.373,0.373,0.373,0.373,0.373,0.373,0.373
