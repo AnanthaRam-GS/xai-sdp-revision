@@ -1,0 +1,19 @@
+model,ranking,ROAR area (AUC) ↓,KAR area (AUC) ↑
+LR,LR-LinearSHAP,0.674,0.678
+LR,random,0.682,0.675
+LR,RF-TreeSHAP ranking,0.663,0.683
+LR,size-first,0.672,0.694
+MLP,MLP-DeepLiftShap,0.680,0.676
+MLP,MLP-IntegratedGradients,0.681,0.674
+MLP,MLP-LIME,0.676,0.677
+MLP,MLP-Saliency,0.677,0.678
+MLP,random,0.678,0.671
+MLP,RF-TreeSHAP ranking,0.657,0.684
+MLP,size-first,0.672,0.687
+RF,RF-TreeSHAP,0.658,0.671
+RF,random,0.673,0.660
+RF,size-first,0.670,0.665
+XGB,XGB-TreeSHAP,0.657,0.669
+XGB,random,0.669,0.658
+XGB,RF-TreeSHAP ranking,0.652,0.672
+XGB,size-first,0.666,0.668

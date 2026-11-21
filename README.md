@@ -226,6 +226,24 @@ python -m scripts.make_step5_reports
 
 Outputs: attributions and LIME runs under `artifacts/robustness/`, `artifacts/attributions_ablation_preprocessing/<preprocessing>/` and `artifacts/attributions_autospearman_time_aware/`; retrained models under `artifacts/models/autospearman_time_aware/`; reports `reports/step5_lime_stability.md`, `step5_background_sensitivity.md`, `step5_preprocessing_explanations.md`, `step5_collinearity.md` and `step5_runtime.md` (with CSVs) and figures in `reports/figures/step5/`. Per-instance values are in `results/robustness/`.
 
+## Step 6: fidelity of the explanations
+
+Tests whether the step 4 (v2) explanations of the seed-0 `main_time_aware` models are faithful to the models (`src/sdp/fidelity/`, settings in `configs/fidelity.yaml`). Rankings are by |attribution| with ties broken by feature order, as in step 4.
+
+- **Removal** (`removal.py`): marginal removal replaces the removed metrics with the values of 50 rows of the step 4 background set and averages P(defective); mean removal (background mean) is a sensitivity check.
+- **Deletion and insertion curves** (`curves.py`): confidence in the model's own prediction as the top-k metrics are removed or added back (k = 0..20); normalised areas and gains over 10 random orderings per instance.
+- **Faithfulness correlation** (`faithfulness.py`, Bhatt et al., 2020): Pearson correlation between subset attribution sums and prediction drops over 50 random 5-metric subsets.
+- **ROAR and KAR** (`roar.py`, Hooker et al., 2019): global rankings from training-set attributions only (stored under `artifacts/attributions/_train/` with `subset="train"`), compared with random, size-first and the RF-TreeSHAP ranking; models refitted with the persisted step 3 hyperparameters (no re-tuning) on the remaining or kept metrics, seeds 0–2.
+- **Sanity checks** (`sanity.py`, Adebayo et al., 2018): cascading and independent layer randomisation of the MLP, and label permutation for all models.
+
+```bash
+python -m scripts.run_fidelity --smoke --estimate-only   # smoke test (one split) and runtime estimate
+python -m scripts.run_fidelity                           # all parts (or --parts curves train roar sanity)
+python -m scripts.make_step6_reports
+```
+
+Outputs under `artifacts/fidelity/`; reports `reports/step6_deletion_insertion.md`, `step6_faithfulness.md`, `step6_roar_kar.md`, `step6_sanity_checks.md`, `step6_summary.md` and `step6_runtime.md` (with CSVs) and figures in `reports/figures/step6/`.
+
 ## Layout
 
 ```
@@ -243,7 +261,8 @@ src/sdp/tuning.py          Optuna tuning
 src/sdp/experiments/       step 2 runner, step 3 engine, configs, persistence
 src/sdp/explain/           explainers, background sets, attribution store, runner (step 4)
 src/sdp/robustness/        step 5 studies (LIME, background, preprocessing, collinearity)
-src/sdp/analysis/          step 3–5 aggregation, reports and figures
+src/sdp/fidelity/          step 6 fidelity tests (removal, curves, faithfulness, ROAR/KAR, sanity checks)
+src/sdp/analysis/          step 3–6 aggregation, reports and figures
 configs/experiments/       experiment definitions
 scripts/prepare_data.py    data preparation entry point
 scripts/run_baselines.py   baseline experiments entry point (step 2)
@@ -255,13 +274,19 @@ configs/explain.yaml       step 4 explanation settings
 configs/robustness.yaml    step 5 study settings
 scripts/run_robustness.py      step 5 studies (smoke test, estimate, full run)
 scripts/make_step5_reports.py  step 5 reports and figures
+scripts/run_fidelity.py        step 6 fidelity tests (smoke test, estimate, full run)
+scripts/make_step6_reports.py  step 6 reports and figures
+configs/fidelity.yaml      step 6 settings
 tests/                     pytest suite
 ```
 
 ## References
 
 - Jureczko, M., & Madeyski, L. (2010). Towards identifying software project clusters with regard to defect prediction. *PROMISE '10*.
+- Adebayo, J., Gilmer, J., Muelly, M., Goodfellow, I., Hardt, M., & Kim, B. (2018). Sanity checks for saliency maps. *NeurIPS 2018*.
+- Bhatt, U., Weller, A., & Moura, J. M. F. (2020). Evaluating and aggregating feature-based model explanations. *IJCAI 2020*, 3016–3022.
 - Herbold, S. (2018). Benchmarking cross-project defect prediction approaches with costs metrics. arXiv:1801.04107.
+- Hooker, S., Erhan, D., Kindermans, P.-J., & Kim, B. (2019). A benchmark for interpretability methods in deep neural networks. *NeurIPS 2019*.
 - Jiarpakdee, J., Tantithamthavorn, C., & Treude, C. (2018). AutoSpearman: Automatically mitigating correlated software metrics for interpreting defect models. *ICSME 2018*, 92–103.
 - Krishna, S., Han, T., Gu, A., Pombra, J., Jabbari, S., Wu, S., & Lakkaraju, H. (2022). The disagreement problem in explainable machine learning: A practitioner's perspective. arXiv:2202.01602.
 - Mende, T., & Koschke, R. (2010). Effort-aware defect prediction models. *CSMR 2010*, 107–116.
