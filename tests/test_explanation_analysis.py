@@ -155,3 +155,13 @@ def test_step5_figure_labels_come_from_names():
     assert list(line.get_ydata()) == [0.4, 0.8]
     fig, axes = F.box_panels({"MLP": {"main": np.array([0.1, 0.9]), "sampling=mean": np.array([0.5])}}, "t", "y")
     assert [t.get_text() for t in axes[0].get_xticklabels()] == ["main", "sampling=mean"]
+
+
+def test_line_panels_label_lines_by_column_name():
+    t = pd.DataFrame({"TreeSHAP": [0.9, 0.5, 0.2], "random": [0.9, 0.7, 0.5]}, index=[0, 1, 2])
+    fig, axes = F.line_panels({"RF": t, "XGB": t[["random"]]}, "t", "k", "p")
+    ax = axes[0][0]
+    assert ax.get_title() == "RF"
+    tree = next(l for l in ax.get_lines() if l.get_label() == "TreeSHAP")
+    assert list(tree.get_ydata()) == [0.9, 0.5, 0.2] and tree.get_linestyle() == "-"
+    assert next(l for l in ax.get_lines() if l.get_label() == "random").get_linestyle() == "--"

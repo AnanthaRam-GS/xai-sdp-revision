@@ -183,3 +183,59 @@ def dendrogram_plot(Z, labels: list[str], title: str, cut: float | None = None, 
     ax.set_title(title, loc="left", color=INK)
     _save(fig, path)
     return fig, ax
+
+
+CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
+
+
+def line_panels(panels: dict[str, pd.DataFrame], title: str, xlabel: str, ylabel: str, path: Path | None = None,
+                dashed=("random",), ncols: int | None = None, sharey: bool = True, panel_legends: bool = False):  # fmt: skip
+    """Small multiples: one panel per key; within a panel one line per column of the
+    frame (x = its index), labelled from the column names. Columns in ``dashed`` are drawn
+    as dashed grey reference lines. Colours follow a fixed column order across panels, or,
+    with ``panel_legends``, the column order within each panel (each panel then has its
+    own legend, so no colour is reused within a legend)."""
+    names = list(dict.fromkeys(c for t in panels.values() for c in t.columns if c not in dashed))
+    colour = {n: CATEGORICAL[i % len(CATEGORICAL)] for i, n in enumerate(names)}
+    keys = list(panels)
+    ncols = ncols or len(keys)
+    nrows = int(np.ceil(len(keys) / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(3.2 * ncols + 0.4, 2.8 * nrows + 0.6), sharey=sharey, squeeze=False)
+    for ax, key in zip(axes.flat, keys):
+        t = panels[key]
+        x = np.arange(len(t.index))
+        own = [c for c in t.columns if c not in dashed]
+        for col in t.columns:
+            ref = col in dashed
+            c = "#898781" if ref else (CATEGORICAL[own.index(col) % len(CATEGORICAL)] if panel_legends else colour[col])
+            ax.plot(x, t[col].to_numpy(dtype=float), linestyle="--" if ref else "-", linewidth=1.3 if ref else 1.5,
+                    color=c, label=str(col), marker=None if ref else "o", markersize=2.5)  # fmt: skip
+        if panel_legends:
+            ax.legend(frameon=False, fontsize=5.5, loc="best", handlelength=1.6)
+        step = max(1, len(x) // 6)
+        ax.set_xticks(x[::step], labels=[str(i) for i in t.index[::step]])
+        ax.set_title(str(key), color=INK)
+        ax.grid(axis="y", color="#e4e3df", linewidth=0.6)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+    for ax in axes.flat[len(keys):]:
+        ax.set_visible(False)
+    for ax in axes[-1]:
+        ax.set_xlabel(xlabel)
+    for ax in axes[:, 0]:
+        ax.set_ylabel(ylabel)
+    fig.suptitle(title, x=0.01, ha="left", color=INK, fontsize=9)
+    if panel_legends:
+        fig.tight_layout(rect=(0, 0, 1, 0.96))
+        _save(fig, path)
+        return fig, axes
+    handles, labels = [], []
+    for ax in axes.flat:
+        for h, lab in zip(*ax.get_legend_handles_labels()):
+            if lab not in labels:
+                handles.append(h)
+                labels.append(lab)
+    fig.tight_layout(rect=(0, 0.08 + 0.05 * (len(labels) > 5), 1, 0.96))
+    fig.legend(handles, labels, loc="lower center", ncol=min(5, len(labels)), frameon=False, bbox_to_anchor=(0.5, 0.0))
+    _save(fig, path)
+    return fig, axes

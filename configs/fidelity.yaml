@@ -1,0 +1,21 @@
+# Step 6: fidelity of the explanations (main_time_aware).
+model_seed: 0
+n_jobs: 10
+max_hours: 8
+output_dir: fidelity            # under the artifacts directory
+curves:
+  n_background: 50              # first 50 rows (seeded) of the step 4 background set
+  n_random: 10                  # random orderings per instance
+  faith_subsets: 50
+  faith_size: 5
+  sample_per_split: null        # null = all test instances
+  reduced_sample_per_split: 200
+roar:
+  ks: [1, 2, 3, 5, 8, 10, 15]
+  reduced_ks: [1, 3, 5, 10]
+  seeds: [0, 1, 2]
+  reduced_seeds: [0, 1]
+  n_random: 5
+  lime_rows: 200
+sanity:
+  flag_threshold: 0.5           # mean Spearman after full randomisation

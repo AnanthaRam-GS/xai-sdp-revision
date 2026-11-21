@@ -81,3 +81,15 @@ def test_good_explanation_beats_random_on_a_linear_model():
     assert res["auc"]["deletion"]["exact"].mean() < res["auc"]["deletion"]["random"].mean()
     assert res["auc"]["insertion"]["exact"].mean() > res["auc"]["insertion"]["random"].mean()
     assert res["curves"]["deletion"]["exact"].shape == (6,)
+
+
+def test_outcome_sample_is_stratified_and_complete_when_small():
+    from sdp.fidelity.evaluation import sample_by_outcome
+
+    outcome = np.array(["TP"] * 50 + ["FP"] * 150 + ["FN"] * 100 + ["TN"] * 700)
+    idx = sample_by_outcome(outcome, 200, seed=0)
+    assert len(idx) == 200 and len(set(idx)) == 200
+    counts = {g: int((outcome[idx] == g).sum()) for g in ("TP", "FP", "FN", "TN")}
+    assert counts == {"TP": 10, "FP": 30, "FN": 20, "TN": 140}
+    np.testing.assert_array_equal(sample_by_outcome(outcome[:120], 200, seed=0), np.arange(120))
+    np.testing.assert_array_equal(sample_by_outcome(outcome, None, seed=0), np.arange(1000))
