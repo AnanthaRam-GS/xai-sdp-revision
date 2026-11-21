@@ -36,7 +36,7 @@ def consecutive_pairs(splits) -> list[tuple]:
 
 
 def pair_id(a, b) -> str:
-    return f"{a.project} {'+'.join(a.train_releases)}>{a.test_release} | {'+'.join(b.train_releases)}>{b.test_release}"
+    return f"{a.project} {'+'.join(a.train_releases)}>{a.test_release} vs {'+'.join(b.train_releases)}>{b.test_release}"
 
 
 def cross_version(store: ImportanceStore, perm: ImportanceStore | None, pairs, explanations, n_boot: int = 1000,

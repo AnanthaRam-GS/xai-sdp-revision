@@ -42,3 +42,14 @@ def test_project_matrix_and_common_features():
     assert mean == pytest.approx((1 - 1 - 1) / 3)
     top = Pj.common_top_features(v, FEATURES, k=5, min_projects=2)
     assert set(top["feature"]) == set(FEATURES[15:])
+
+
+def test_classifier_two_sample_test_groups_versions_of_a_class():
+    """Two versions of the same classes, slightly changed: grouping by class name keeps
+    both versions in one fold, so the test stays near chance."""
+    rng = np.random.default_rng(3)
+    A = pd.DataFrame(rng.gamma(2, 5, size=(200, 20)), columns=FEATURES)
+    B = A * (1 + 0.02 * rng.normal(size=A.shape))
+    names = [f"C{i}" for i in range(200)]
+    grouped, _ = D.classifier_two_sample(A, B, seed=0, names_a=names, names_b=names)
+    assert grouped == pytest.approx(0.5, abs=0.12)
