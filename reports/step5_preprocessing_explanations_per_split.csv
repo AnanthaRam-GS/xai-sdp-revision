@@ -1,0 +1,241 @@
+model,method,preprocessing,project,split_id,loc_share,size_group_share,family,setting
+lr,LinearSHAP,log_standard,ant,ta-consecutive:ant:1.3>1.4,0.07092694106248347,0.2410262431874317,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,ant,ta-consecutive:ant:1.4>1.5,0.028000231147556648,0.10562093593246773,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,ant,ta-consecutive:ant:1.5>1.6,0.07758502991509944,0.33715071767373384,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,ant,ta-consecutive:ant:1.6>1.7,0.0957179606067857,0.29369989451432155,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,camel,ta-consecutive:camel:1.2>1.4,0.13659574084870635,0.49207573552860717,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,camel,ta-consecutive:camel:1.4>1.6,0.060467919145227,0.37108567524817,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,ivy,ta-consecutive:ivy:1.1>1.4,0.07606679078419845,0.2793465180846568,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,ivy,ta-consecutive:ivy:1.4>2.0,0.0810303371529294,0.2288427813099176,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,jedit,ta-consecutive:jedit:3.2>4.0,0.013738791780165635,0.15956850326864597,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,jedit,ta-consecutive:jedit:4.0>4.1,0.029195720327620734,0.21237032211087628,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,jedit,ta-consecutive:jedit:4.1>4.2,0.07187012038012434,0.2761712574946691,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,lucene,ta-consecutive:lucene:2.0>2.2,0.0808564422606122,0.24923614429539165,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,lucene,ta-consecutive:lucene:2.2>2.4,0.07130864484369118,0.28002917248207027,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,poi,ta-consecutive:poi:1.5>2.0,0.06752377157175524,0.3023299306940026,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,poi,ta-consecutive:poi:2.0>2.5,0.05365513293419995,0.1798093906357986,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,poi,ta-consecutive:poi:2.5>3.0,0.07724613386039439,0.1803904945632398,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,synapse,ta-consecutive:synapse:1.0>1.1,0.05813537284352961,0.2026038929726753,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,synapse,ta-consecutive:synapse:1.1>1.2,0.027287044363927076,0.12747727928006908,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,velocity,ta-consecutive:velocity:1.4>1.5,0.07826710694944258,0.18085093353467527,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,velocity,ta-consecutive:velocity:1.5>1.6,0.0945780213339902,0.19822532882563373,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,xalan,ta-consecutive:xalan:2.4>2.5,0.15366918077811106,0.31579937019237186,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,xalan,ta-consecutive:xalan:2.5>2.6,0.09718546432422623,0.2973503503285087,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,xerces,ta-consecutive:xerces:1.2>1.3,0.013700760351200228,0.08799321515309498,LR-LinearSHAP,log_standard
+lr,LinearSHAP,log_standard,xerces,ta-consecutive:xerces:init>1.2,0.01631317310705838,0.18454887270541873,LR-LinearSHAP,log_standard
+lr,LinearSHAP,none,ant,ta-consecutive:ant:1.3>1.4,0.32011791587713956,0.5990403356008144,LR-LinearSHAP,none
+lr,LinearSHAP,none,ant,ta-consecutive:ant:1.4>1.5,0.15349746563978642,0.46745222826428867,LR-LinearSHAP,none
+lr,LinearSHAP,none,ant,ta-consecutive:ant:1.5>1.6,0.045830155531868116,0.5983037764725545,LR-LinearSHAP,none
+lr,LinearSHAP,none,ant,ta-consecutive:ant:1.6>1.7,0.011149051470536953,0.680205662578236,LR-LinearSHAP,none
+lr,LinearSHAP,none,camel,ta-consecutive:camel:1.2>1.4,0.04123819297648372,0.5585507294981121,LR-LinearSHAP,none
+lr,LinearSHAP,none,camel,ta-consecutive:camel:1.4>1.6,0.003557391523022943,0.26773917618900867,LR-LinearSHAP,none
+lr,LinearSHAP,none,ivy,ta-consecutive:ivy:1.1>1.4,0.2843105281904633,0.6343410976611377,LR-LinearSHAP,none
+lr,LinearSHAP,none,ivy,ta-consecutive:ivy:1.4>2.0,0.20137128441396315,0.5326064866648764,LR-LinearSHAP,none
+lr,LinearSHAP,none,jedit,ta-consecutive:jedit:3.2>4.0,0.060505727285982955,0.27267600954215154,LR-LinearSHAP,none
+lr,LinearSHAP,none,jedit,ta-consecutive:jedit:4.0>4.1,0.11703062711618684,0.48872399602400096,LR-LinearSHAP,none
+lr,LinearSHAP,none,jedit,ta-consecutive:jedit:4.1>4.2,0.038767515327489725,0.3488893299240316,LR-LinearSHAP,none
+lr,LinearSHAP,none,lucene,ta-consecutive:lucene:2.0>2.2,0.03872222729981728,0.46027794213537304,LR-LinearSHAP,none
+lr,LinearSHAP,none,lucene,ta-consecutive:lucene:2.2>2.4,0.17617043537669602,0.445641409268568,LR-LinearSHAP,none
+lr,LinearSHAP,none,poi,ta-consecutive:poi:1.5>2.0,0.2699600879241407,0.7427925265919036,LR-LinearSHAP,none
+lr,LinearSHAP,none,poi,ta-consecutive:poi:2.0>2.5,0.1424549943740734,0.3921691589282982,LR-LinearSHAP,none
+lr,LinearSHAP,none,poi,ta-consecutive:poi:2.5>3.0,0.02001624765880001,0.25508100675440987,LR-LinearSHAP,none
+lr,LinearSHAP,none,synapse,ta-consecutive:synapse:1.0>1.1,0.32946632545744337,0.4890565701237932,LR-LinearSHAP,none
+lr,LinearSHAP,none,synapse,ta-consecutive:synapse:1.1>1.2,0.16019047491500799,0.5575772202542846,LR-LinearSHAP,none
+lr,LinearSHAP,none,velocity,ta-consecutive:velocity:1.4>1.5,0.06883302445981601,0.38195142262381754,LR-LinearSHAP,none
+lr,LinearSHAP,none,velocity,ta-consecutive:velocity:1.5>1.6,0.04147634104474075,0.25270322121077393,LR-LinearSHAP,none
+lr,LinearSHAP,none,xalan,ta-consecutive:xalan:2.4>2.5,0.152861246126704,0.5546607789121318,LR-LinearSHAP,none
+lr,LinearSHAP,none,xalan,ta-consecutive:xalan:2.5>2.6,0.04629288980493847,0.49042671287325523,LR-LinearSHAP,none
+lr,LinearSHAP,none,xerces,ta-consecutive:xerces:1.2>1.3,0.05902206412059212,0.2525598520369891,LR-LinearSHAP,none
+lr,LinearSHAP,none,xerces,ta-consecutive:xerces:init>1.2,0.15868223000139817,0.40365211157757513,LR-LinearSHAP,none
+lr,LinearSHAP,standard,ant,ta-consecutive:ant:1.3>1.4,0.08527227174566203,0.24915249543485268,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,ant,ta-consecutive:ant:1.4>1.5,0.06462526394644605,0.1818521617294883,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,ant,ta-consecutive:ant:1.5>1.6,0.08329415159292008,0.31412572730294286,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,ant,ta-consecutive:ant:1.6>1.7,0.05245280899762815,0.2707688546444703,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,camel,ta-consecutive:camel:1.2>1.4,0.03606869669544685,0.44616395889254934,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,camel,ta-consecutive:camel:1.4>1.6,0.03264842975926807,0.26128697017236135,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,ivy,ta-consecutive:ivy:1.1>1.4,0.020984740408900224,0.15023309114524083,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,ivy,ta-consecutive:ivy:1.4>2.0,0.04551566023840951,0.15385640775171075,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,jedit,ta-consecutive:jedit:3.2>4.0,0.029205710733558272,0.14266647729551948,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,jedit,ta-consecutive:jedit:4.0>4.1,0.02956033802816952,0.1327408045282368,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,jedit,ta-consecutive:jedit:4.1>4.2,0.005686675598522454,0.129225595170137,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,lucene,ta-consecutive:lucene:2.0>2.2,0.03277190112189925,0.2632452503545266,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,lucene,ta-consecutive:lucene:2.2>2.4,0.052388728560525566,0.29433081871899264,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,poi,ta-consecutive:poi:1.5>2.0,0.03508865356568898,0.271122062722883,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,poi,ta-consecutive:poi:2.0>2.5,0.04616194797166649,0.23577222719560847,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,poi,ta-consecutive:poi:2.5>3.0,0.014926649704420068,0.1642827423053733,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,synapse,ta-consecutive:synapse:1.0>1.1,0.10377371048911617,0.21137543161509664,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,synapse,ta-consecutive:synapse:1.1>1.2,0.04051448913825019,0.10708246686805936,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,velocity,ta-consecutive:velocity:1.4>1.5,0.024374927028068382,0.21139094695723223,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,velocity,ta-consecutive:velocity:1.5>1.6,0.014622167794928703,0.2019481494003288,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,xalan,ta-consecutive:xalan:2.4>2.5,0.10990633189675361,0.30760682099943426,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,xalan,ta-consecutive:xalan:2.5>2.6,0.04969163242978305,0.2363032313735438,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,xerces,ta-consecutive:xerces:1.2>1.3,0.048633449396793635,0.1948262001349205,LR-LinearSHAP,standard
+lr,LinearSHAP,standard,xerces,ta-consecutive:xerces:init>1.2,0.019200774388091025,0.20053245105160183,LR-LinearSHAP,standard
+mlp,DeepLift,log_standard,ant,ta-consecutive:ant:1.3>1.4,0.06683022949039191,0.24471244589962904,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,ant,ta-consecutive:ant:1.4>1.5,0.025667500066766703,0.10197501570864986,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,ant,ta-consecutive:ant:1.5>1.6,0.04765805782603216,0.263792503453338,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,ant,ta-consecutive:ant:1.6>1.7,0.10081378606110769,0.21390580201661652,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,camel,ta-consecutive:camel:1.2>1.4,0.037752082639471204,0.23939425059005198,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,camel,ta-consecutive:camel:1.4>1.6,0.03731043345708802,0.2708080676457683,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,ivy,ta-consecutive:ivy:1.1>1.4,0.07183948350168161,0.2363009475570182,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,ivy,ta-consecutive:ivy:1.4>2.0,0.0635446695302605,0.2098732980268508,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,jedit,ta-consecutive:jedit:3.2>4.0,0.04124670097602553,0.18926758694175205,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,jedit,ta-consecutive:jedit:4.0>4.1,0.0466847930199687,0.1855622064332145,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,jedit,ta-consecutive:jedit:4.1>4.2,0.04401758334639946,0.25138502907583354,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,lucene,ta-consecutive:lucene:2.0>2.2,0.07203488075505045,0.23879124510874003,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,lucene,ta-consecutive:lucene:2.2>2.4,0.043865051581631065,0.18750557164623238,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,poi,ta-consecutive:poi:1.5>2.0,0.05484284388574442,0.2511551251208714,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,poi,ta-consecutive:poi:2.0>2.5,0.041759373776214796,0.16753249639453296,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,poi,ta-consecutive:poi:2.5>3.0,0.054388314219101175,0.18930916981980855,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,synapse,ta-consecutive:synapse:1.0>1.1,0.04713229090077287,0.1939723044373915,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,synapse,ta-consecutive:synapse:1.1>1.2,0.036197299157658985,0.16549460561870988,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,velocity,ta-consecutive:velocity:1.4>1.5,0.0879173412015847,0.1799799314877595,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,velocity,ta-consecutive:velocity:1.5>1.6,0.08434799558508775,0.16133861587431567,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,xalan,ta-consecutive:xalan:2.4>2.5,0.09390133871576278,0.30515972175802264,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,xalan,ta-consecutive:xalan:2.5>2.6,0.06666470216456731,0.18918356812743262,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,xerces,ta-consecutive:xerces:1.2>1.3,0.024742298005049023,0.11001640780318182,MLP-DeepLift,log_standard
+mlp,DeepLift,log_standard,xerces,ta-consecutive:xerces:init>1.2,0.022661731355177878,0.14874544977235377,MLP-DeepLift,log_standard
+mlp,DeepLift,none,ant,ta-consecutive:ant:1.3>1.4,0.4041949349339723,0.514159485460173,MLP-DeepLift,none
+mlp,DeepLift,none,ant,ta-consecutive:ant:1.4>1.5,0.23285324674193272,0.4177478773326421,MLP-DeepLift,none
+mlp,DeepLift,none,ant,ta-consecutive:ant:1.5>1.6,0.34460755565635676,0.4692992363727422,MLP-DeepLift,none
+mlp,DeepLift,none,ant,ta-consecutive:ant:1.6>1.7,0.4889595093928453,0.6585361049628113,MLP-DeepLift,none
+mlp,DeepLift,none,camel,ta-consecutive:camel:1.2>1.4,0.22874752989847824,0.39915214714450764,MLP-DeepLift,none
+mlp,DeepLift,none,camel,ta-consecutive:camel:1.4>1.6,0.3228665247915255,0.48250491958823966,MLP-DeepLift,none
+mlp,DeepLift,none,ivy,ta-consecutive:ivy:1.1>1.4,0.37164858214655794,0.49115159003865977,MLP-DeepLift,none
+mlp,DeepLift,none,ivy,ta-consecutive:ivy:1.4>2.0,0.33004081915932865,0.4412727563482365,MLP-DeepLift,none
+mlp,DeepLift,none,jedit,ta-consecutive:jedit:3.2>4.0,0.28727361286747494,0.43255102050070937,MLP-DeepLift,none
+mlp,DeepLift,none,jedit,ta-consecutive:jedit:4.0>4.1,0.2820131763411674,0.4603867886840898,MLP-DeepLift,none
+mlp,DeepLift,none,jedit,ta-consecutive:jedit:4.1>4.2,0.1823564784602519,0.31150899677565774,MLP-DeepLift,none
+mlp,DeepLift,none,lucene,ta-consecutive:lucene:2.0>2.2,0.43568346118578266,0.5656165673321245,MLP-DeepLift,none
+mlp,DeepLift,none,lucene,ta-consecutive:lucene:2.2>2.4,0.26001924897361584,0.36770268230325404,MLP-DeepLift,none
+mlp,DeepLift,none,poi,ta-consecutive:poi:1.5>2.0,0.44280701846142234,0.5377817550671692,MLP-DeepLift,none
+mlp,DeepLift,none,poi,ta-consecutive:poi:2.0>2.5,0.3484471964110224,0.5352605835704756,MLP-DeepLift,none
+mlp,DeepLift,none,poi,ta-consecutive:poi:2.5>3.0,0.33412616425581404,0.49035326730982554,MLP-DeepLift,none
+mlp,DeepLift,none,synapse,ta-consecutive:synapse:1.0>1.1,0.4370699525094672,0.5440022578323529,MLP-DeepLift,none
+mlp,DeepLift,none,synapse,ta-consecutive:synapse:1.1>1.2,0.22557276574492394,0.4101055544111851,MLP-DeepLift,none
+mlp,DeepLift,none,velocity,ta-consecutive:velocity:1.4>1.5,0.36074314961858095,0.6070886562972728,MLP-DeepLift,none
+mlp,DeepLift,none,velocity,ta-consecutive:velocity:1.5>1.6,0.4128845680085593,0.5377765233836447,MLP-DeepLift,none
+mlp,DeepLift,none,xalan,ta-consecutive:xalan:2.4>2.5,0.5338065340704439,0.6293196565047852,MLP-DeepLift,none
+mlp,DeepLift,none,xalan,ta-consecutive:xalan:2.5>2.6,0.40029516537674337,0.5531663063999959,MLP-DeepLift,none
+mlp,DeepLift,none,xerces,ta-consecutive:xerces:1.2>1.3,0.4179868978447459,0.5185437006379806,MLP-DeepLift,none
+mlp,DeepLift,none,xerces,ta-consecutive:xerces:init>1.2,0.2313578389829682,0.3074871334649955,MLP-DeepLift,none
+mlp,DeepLift,standard,ant,ta-consecutive:ant:1.3>1.4,0.09172693740942742,0.26080951564462623,MLP-DeepLift,standard
+mlp,DeepLift,standard,ant,ta-consecutive:ant:1.4>1.5,0.031500972290601795,0.12114443447311181,MLP-DeepLift,standard
+mlp,DeepLift,standard,ant,ta-consecutive:ant:1.5>1.6,0.040757415013385194,0.25848667076223475,MLP-DeepLift,standard
+mlp,DeepLift,standard,ant,ta-consecutive:ant:1.6>1.7,0.08082204740799535,0.260646483320948,MLP-DeepLift,standard
+mlp,DeepLift,standard,camel,ta-consecutive:camel:1.2>1.4,0.023650192130802328,0.17274065620883708,MLP-DeepLift,standard
+mlp,DeepLift,standard,camel,ta-consecutive:camel:1.4>1.6,0.05680999132821811,0.2718731257353338,MLP-DeepLift,standard
+mlp,DeepLift,standard,ivy,ta-consecutive:ivy:1.1>1.4,0.03257822392278459,0.1690182896971208,MLP-DeepLift,standard
+mlp,DeepLift,standard,ivy,ta-consecutive:ivy:1.4>2.0,0.024656866612225242,0.14471805844366387,MLP-DeepLift,standard
+mlp,DeepLift,standard,jedit,ta-consecutive:jedit:3.2>4.0,0.015653802188518594,0.10055686597380997,MLP-DeepLift,standard
+mlp,DeepLift,standard,jedit,ta-consecutive:jedit:4.0>4.1,0.018137673121561265,0.11439520289709622,MLP-DeepLift,standard
+mlp,DeepLift,standard,jedit,ta-consecutive:jedit:4.1>4.2,0.01747655182645147,0.18313919542001567,MLP-DeepLift,standard
+mlp,DeepLift,standard,lucene,ta-consecutive:lucene:2.0>2.2,0.03893937835233557,0.23850986407287142,MLP-DeepLift,standard
+mlp,DeepLift,standard,lucene,ta-consecutive:lucene:2.2>2.4,0.032507033680476596,0.2228531127300395,MLP-DeepLift,standard
+mlp,DeepLift,standard,poi,ta-consecutive:poi:1.5>2.0,0.030541917998881885,0.2545396559222445,MLP-DeepLift,standard
+mlp,DeepLift,standard,poi,ta-consecutive:poi:2.0>2.5,0.037897039102817505,0.20603152002667438,MLP-DeepLift,standard
+mlp,DeepLift,standard,poi,ta-consecutive:poi:2.5>3.0,0.022670586241519235,0.1540632998542555,MLP-DeepLift,standard
+mlp,DeepLift,standard,synapse,ta-consecutive:synapse:1.0>1.1,0.07060607411163879,0.1824500685541654,MLP-DeepLift,standard
+mlp,DeepLift,standard,synapse,ta-consecutive:synapse:1.1>1.2,0.05699121814663399,0.1749300527746825,MLP-DeepLift,standard
+mlp,DeepLift,standard,velocity,ta-consecutive:velocity:1.4>1.5,0.028112693167552893,0.12320255112672214,MLP-DeepLift,standard
+mlp,DeepLift,standard,velocity,ta-consecutive:velocity:1.5>1.6,0.014328397894464717,0.13389184205397126,MLP-DeepLift,standard
+mlp,DeepLift,standard,xalan,ta-consecutive:xalan:2.4>2.5,0.10481149962086174,0.33965120276159866,MLP-DeepLift,standard
+mlp,DeepLift,standard,xalan,ta-consecutive:xalan:2.5>2.6,0.05895549114358757,0.22044823515959844,MLP-DeepLift,standard
+mlp,DeepLift,standard,xerces,ta-consecutive:xerces:1.2>1.3,0.035072432725988825,0.17088323167256875,MLP-DeepLift,standard
+mlp,DeepLift,standard,xerces,ta-consecutive:xerces:init>1.2,0.022877916866273957,0.15697525039356844,MLP-DeepLift,standard
+mlp,DeepLiftShap,log_standard,ant,ta-consecutive:ant:1.3>1.4,0.07171378236035518,0.2607492863693913,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,ant,ta-consecutive:ant:1.4>1.5,0.02484412104138327,0.09807826788709424,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,ant,ta-consecutive:ant:1.5>1.6,0.049191869443761846,0.2926329637385915,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,ant,ta-consecutive:ant:1.6>1.7,0.11251011636621433,0.23393238091800828,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,camel,ta-consecutive:camel:1.2>1.4,0.045016469221971514,0.27363675208621585,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,camel,ta-consecutive:camel:1.4>1.6,0.03971127720567278,0.2923082286698968,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,ivy,ta-consecutive:ivy:1.1>1.4,0.07882145130002591,0.2521043166027142,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,ivy,ta-consecutive:ivy:1.4>2.0,0.07995410347568174,0.22936802608637943,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,jedit,ta-consecutive:jedit:3.2>4.0,0.04356073063482151,0.1928550708768103,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,jedit,ta-consecutive:jedit:4.0>4.1,0.04551304816332811,0.20746386888543702,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,jedit,ta-consecutive:jedit:4.1>4.2,0.049124799263116914,0.28537898785836063,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,lucene,ta-consecutive:lucene:2.0>2.2,0.07831112360046638,0.25660956213999186,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,lucene,ta-consecutive:lucene:2.2>2.4,0.05080884842368575,0.2115920580265251,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,poi,ta-consecutive:poi:1.5>2.0,0.06262970698816372,0.2850423547321788,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,poi,ta-consecutive:poi:2.0>2.5,0.04506110330550598,0.17737783124161394,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,poi,ta-consecutive:poi:2.5>3.0,0.06252348189671235,0.21410124015575863,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,synapse,ta-consecutive:synapse:1.0>1.1,0.04577107573534618,0.19176363700522325,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,synapse,ta-consecutive:synapse:1.1>1.2,0.04275006961149148,0.17094090230774844,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,velocity,ta-consecutive:velocity:1.4>1.5,0.08451371522760132,0.18675191367748042,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,velocity,ta-consecutive:velocity:1.5>1.6,0.0946196843940876,0.1715288392493837,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,xalan,ta-consecutive:xalan:2.4>2.5,0.10130955046491122,0.32840514774552887,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,xalan,ta-consecutive:xalan:2.5>2.6,0.07365389310418213,0.19908699326440854,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,xerces,ta-consecutive:xerces:1.2>1.3,0.02600394321541285,0.11127401118843834,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,log_standard,xerces,ta-consecutive:xerces:init>1.2,0.022454470476193443,0.15867745572218891,MLP-DeepLiftShap,log_standard
+mlp,DeepLiftShap,none,ant,ta-consecutive:ant:1.3>1.4,0.45350696170453153,0.5745522583639258,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,ant,ta-consecutive:ant:1.4>1.5,0.22284627718015554,0.4444681593494139,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,ant,ta-consecutive:ant:1.5>1.6,0.39187597746893493,0.5213663245064536,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,ant,ta-consecutive:ant:1.6>1.7,0.4621228365561548,0.6558088827244992,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,camel,ta-consecutive:camel:1.2>1.4,0.2111518037521661,0.4156186257362913,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,camel,ta-consecutive:camel:1.4>1.6,0.30358771431771736,0.4806437415024158,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,ivy,ta-consecutive:ivy:1.1>1.4,0.40704239005312315,0.53826869830416,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,ivy,ta-consecutive:ivy:1.4>2.0,0.33265529035888153,0.4953430115897823,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,jedit,ta-consecutive:jedit:3.2>4.0,0.30382073179561286,0.48868317978458176,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,jedit,ta-consecutive:jedit:4.0>4.1,0.3975372880138681,0.5503424860699635,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,jedit,ta-consecutive:jedit:4.1>4.2,0.29058784755414957,0.44558836861194057,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,lucene,ta-consecutive:lucene:2.0>2.2,0.39297224964545713,0.5476162358663315,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,lucene,ta-consecutive:lucene:2.2>2.4,0.2726810206182646,0.39481916617614465,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,poi,ta-consecutive:poi:1.5>2.0,0.42483009995953347,0.537729190777865,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,poi,ta-consecutive:poi:2.0>2.5,0.32179832552813764,0.5156064884348959,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,poi,ta-consecutive:poi:2.5>3.0,0.3339950019609724,0.4932428229756482,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,synapse,ta-consecutive:synapse:1.0>1.1,0.4460867135641493,0.550935880874781,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,synapse,ta-consecutive:synapse:1.1>1.2,0.22978479858913953,0.43583953739765596,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,velocity,ta-consecutive:velocity:1.4>1.5,0.24702566409964527,0.503741030874657,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,velocity,ta-consecutive:velocity:1.5>1.6,0.39033075714143417,0.538230118764818,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,xalan,ta-consecutive:xalan:2.4>2.5,0.5156604299434656,0.6272703352681953,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,xalan,ta-consecutive:xalan:2.5>2.6,0.3875487908106014,0.55809025873997,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,xerces,ta-consecutive:xerces:1.2>1.3,0.3179651643205009,0.44026400577007035,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,none,xerces,ta-consecutive:xerces:init>1.2,0.20659306117073034,0.3273379484481406,MLP-DeepLiftShap,none
+mlp,DeepLiftShap,standard,ant,ta-consecutive:ant:1.3>1.4,0.09466486223489941,0.2653734403917921,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,ant,ta-consecutive:ant:1.4>1.5,0.03955942947840738,0.12375651215560612,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,ant,ta-consecutive:ant:1.5>1.6,0.05337522583695824,0.2975380716187344,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,ant,ta-consecutive:ant:1.6>1.7,0.0802030558318086,0.27543288598744503,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,camel,ta-consecutive:camel:1.2>1.4,0.021618720977928888,0.18202109914823822,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,camel,ta-consecutive:camel:1.4>1.6,0.06033999780551376,0.26564476993849034,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,ivy,ta-consecutive:ivy:1.1>1.4,0.026978251112902456,0.158601667425641,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,ivy,ta-consecutive:ivy:1.4>2.0,0.024114937961893037,0.14558214379748652,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,jedit,ta-consecutive:jedit:3.2>4.0,0.01347857356381033,0.08920253425722435,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,jedit,ta-consecutive:jedit:4.0>4.1,0.019965262489182935,0.1161350283444292,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,jedit,ta-consecutive:jedit:4.1>4.2,0.01338826533976158,0.17852394327159835,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,lucene,ta-consecutive:lucene:2.0>2.2,0.04129510350458817,0.26146899854875166,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,lucene,ta-consecutive:lucene:2.2>2.4,0.029575873673136226,0.22911993274911416,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,poi,ta-consecutive:poi:1.5>2.0,0.03184403364727714,0.26236616184482664,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,poi,ta-consecutive:poi:2.0>2.5,0.035475980110794086,0.20631771884775238,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,poi,ta-consecutive:poi:2.5>3.0,0.022583521624989524,0.153219859242446,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,synapse,ta-consecutive:synapse:1.0>1.1,0.07241067169372967,0.18084345341447905,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,synapse,ta-consecutive:synapse:1.1>1.2,0.060171641119939334,0.17519153722341219,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,velocity,ta-consecutive:velocity:1.4>1.5,0.029060973522323702,0.11213798097739329,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,velocity,ta-consecutive:velocity:1.5>1.6,0.012010322675232384,0.12532386518067623,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,xalan,ta-consecutive:xalan:2.4>2.5,0.10565918104641756,0.34203217443477224,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,xalan,ta-consecutive:xalan:2.5>2.6,0.0600987310827993,0.24234169348699494,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,xerces,ta-consecutive:xerces:1.2>1.3,0.03838384640695998,0.18401870179774554,MLP-DeepLiftShap,standard
+mlp,DeepLiftShap,standard,xerces,ta-consecutive:xerces:init>1.2,0.016547958900184075,0.14479367673518456,MLP-DeepLiftShap,standard
+mlp,DeepLift_zero_baseline,none,ant,ta-consecutive:ant:1.3>1.4,0.39268513283985773,0.5641730989141949,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,ant,ta-consecutive:ant:1.4>1.5,0.2266051979599059,0.46887274864760686,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,ant,ta-consecutive:ant:1.5>1.6,0.352937857044863,0.5223469945705259,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,ant,ta-consecutive:ant:1.6>1.7,0.41924660229764255,0.6448369319836463,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,camel,ta-consecutive:camel:1.2>1.4,0.24776771635650907,0.4945806941583658,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,camel,ta-consecutive:camel:1.4>1.6,0.2990288931691702,0.5021354151112103,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,ivy,ta-consecutive:ivy:1.1>1.4,0.3304792855004806,0.531497646041933,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,ivy,ta-consecutive:ivy:1.4>2.0,0.31184285634237635,0.5223813271530344,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,jedit,ta-consecutive:jedit:3.2>4.0,0.28070829306174494,0.49505849009617275,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,jedit,ta-consecutive:jedit:4.0>4.1,0.3739532736507605,0.5501545183039747,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,jedit,ta-consecutive:jedit:4.1>4.2,0.2866337199222114,0.4771384806957394,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,lucene,ta-consecutive:lucene:2.0>2.2,0.3766014296126107,0.5615825970159942,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,lucene,ta-consecutive:lucene:2.2>2.4,0.300285190168414,0.48341211228345554,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,poi,ta-consecutive:poi:1.5>2.0,0.44109787287828495,0.6100880848691659,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,poi,ta-consecutive:poi:2.0>2.5,0.3108073129268389,0.5570694266792312,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,poi,ta-consecutive:poi:2.5>3.0,0.36758935986302455,0.5431664933372178,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,synapse,ta-consecutive:synapse:1.0>1.1,0.41720892245456787,0.5540519268326695,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,synapse,ta-consecutive:synapse:1.1>1.2,0.23289694400264366,0.4892994632969089,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,velocity,ta-consecutive:velocity:1.4>1.5,0.19301907633185997,0.5208278338278944,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,velocity,ta-consecutive:velocity:1.5>1.6,0.3540267621193458,0.5432194481383809,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,xalan,ta-consecutive:xalan:2.4>2.5,0.4846309495663531,0.618598917199056,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,xalan,ta-consecutive:xalan:2.5>2.6,0.41718357603128176,0.6014535175382736,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,xerces,ta-consecutive:xerces:1.2>1.3,0.23539625408358136,0.45202365531658595,MLP-DeepLift,none (zero baseline)
+mlp,DeepLift_zero_baseline,none,xerces,ta-consecutive:xerces:init>1.2,0.1621370148920352,0.36567314478297647,MLP-DeepLift,none (zero baseline)

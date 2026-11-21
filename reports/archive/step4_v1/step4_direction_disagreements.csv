@@ -1,0 +1,20 @@
+feature,within,positive,negative
+cam,LR,LR-LIME,LR-LinearSHAP
+cam,MLP,MLP-LIME,"MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP"
+cam,RF,RF-LIME,RF-TreeSHAP
+cam,XGB,XGB-LIME,XGB-TreeSHAP
+cam,all models,"LR-LIME, MLP-LIME, RF-LIME, XGB-LIME","LR-LinearSHAP, MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP, RF-TreeSHAP, XGB-TreeSHAP"
+dam,all models,"LR-LIME, LR-LinearSHAP, MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP, XGB-TreeSHAP",RF-LIME
+lcom,MLP,"MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP",MLP-Saliency
+lcom,RF,RF-TreeSHAP,RF-LIME
+lcom,all models,"LR-LIME, LR-LinearSHAP, MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP, RF-TreeSHAP, XGB-TreeSHAP","MLP-Saliency, RF-LIME"
+lcom3,MLP,"MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP","MLP-LIME, MLP-Saliency"
+lcom3,RF,RF-TreeSHAP,RF-LIME
+lcom3,XGB,XGB-TreeSHAP,XGB-LIME
+lcom3,all models,"LR-LinearSHAP, MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP, RF-TreeSHAP, XGB-TreeSHAP","MLP-LIME, MLP-Saliency, RF-LIME, XGB-LIME"
+npm,MLP,"MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP","MLP-LIME, MLP-Saliency"
+npm,RF,RF-TreeSHAP,RF-LIME
+npm,XGB,XGB-TreeSHAP,XGB-LIME
+npm,all models,"LR-LinearSHAP, MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP, RF-TreeSHAP, XGB-TreeSHAP","MLP-LIME, MLP-Saliency, RF-LIME, XGB-LIME"
+wmc,MLP,"MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP",MLP-LIME
+wmc,all models,"LR-LinearSHAP, MLP-DeepLift, MLP-DeepLiftShap, MLP-GradientShap, MLP-InputXGradient, MLP-IntegratedGradients, MLP-KernelSHAP, RF-TreeSHAP, XGB-TreeSHAP",MLP-LIME
