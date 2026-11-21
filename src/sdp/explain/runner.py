@@ -233,8 +233,10 @@ def execute_job(job: ExplainJob, df: pd.DataFrame, settings: ExplainSettings, ro
     """Explain one (split, model, seed) in the current process (normally a joblib worker)."""
     from threadpoolctl import threadpool_limits
 
+    from sdp.log import setup_logging
     from sdp.seed import set_seed
 
+    setup_logging()  # worker processes start without logging configuration
     set_seed(job.seed, torch_threads=1, quiet=True)
     t0 = time.perf_counter()
     timings, checks = [], []
