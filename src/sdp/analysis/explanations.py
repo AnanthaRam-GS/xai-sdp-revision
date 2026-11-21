@@ -19,7 +19,7 @@ Conventions:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import combinations
 from pathlib import Path
 
@@ -37,7 +37,7 @@ MODEL_LABEL = {"mlp": "MLP", "lr": "LR", "rf": "RF", "xgb": "XGB"}
 MODEL_ORDER = ["mlp", "lr", "rf", "xgb"]
 MLP_METHODS = ["DeepLift", "DeepLiftShap", "GradientShap", "IntegratedGradients", "Saliency", "InputXGradient",
                "LIME", "KernelSHAP"]  # fmt: skip
-METHOD_ORDER = MLP_METHODS + ["TreeSHAP", "LinearSHAP"]
+METHOD_ORDER = MLP_METHODS + ["TreeSHAP", "LinearSHAP", "LIME_mean_sampling", "DeepLift_zero_baseline"]
 CROSS_MODEL = [("mlp", "DeepLiftShap"), ("rf", "TreeSHAP"), ("xgb", "TreeSHAP"), ("lr", "LinearSHAP")]
 LIME_ACROSS = [(m, "LIME") for m in MODEL_ORDER]
 KEYS = ["split_id", "project", "model", "method", "seed", "instance_id"]
@@ -51,8 +51,13 @@ def label(model: str, method: str) -> str:
 
 
 def explanation_order(pairs) -> list[tuple[str, str]]:
-    """(model, method) pairs in a fixed reading order."""
-    return sorted(set(pairs), key=lambda p: (MODEL_ORDER.index(p[0]), METHOD_ORDER.index(p[1])))
+    """(model, method) pairs in a fixed reading order (unknown names last, alphabetically)."""
+    def key(p):
+        m = MODEL_ORDER.index(p[0]) if p[0] in MODEL_ORDER else len(MODEL_ORDER)
+        k = METHOD_ORDER.index(p[1]) if p[1] in METHOD_ORDER else len(METHOD_ORDER)
+        return (m, k, p)
+
+    return sorted(set(pairs), key=key)
 
 
 # ------------------------------------------------------------------------ loading
@@ -63,15 +68,16 @@ class Explanations:
     """Wide explanations: ``meta`` rows align with the rows of ``attr`` and ``raw``."""
 
     meta: pd.DataFrame
-    attr: np.ndarray  # signed attributions (n × 20), columns = FEATURES
-    raw: np.ndarray  # raw metric values (n × 20), columns = FEATURES
+    attr: np.ndarray  # signed attributions (n × p), columns = ``features``
+    raw: np.ndarray  # raw values (n × p), columns = ``features``
+    features: list[str] = field(default_factory=lambda: list(FEATURES))  # metric or cluster names
 
     def __len__(self) -> int:
         return len(self.meta)
 
     def subset(self, mask) -> "Explanations":
         mask = np.asarray(mask, dtype=bool)
-        return Explanations(self.meta[mask].reset_index(drop=True), self.attr[mask], self.raw[mask])
+        return Explanations(self.meta[mask].reset_index(drop=True), self.attr[mask], self.raw[mask], self.features)
 
     def select(self, model: str, method: str) -> "Explanations":
         return self.subset((self.meta["model"] == model).to_numpy() & (self.meta["method"] == method).to_numpy())
@@ -81,26 +87,33 @@ class Explanations:
 
     @staticmethod
     def concat(parts: list["Explanations"]) -> "Explanations":
-        return Explanations(pd.concat([p.meta for p in parts], ignore_index=True),
-                            np.vstack([p.attr for p in parts]), np.vstack([p.raw for p in parts]))  # fmt: skip
+        if any(p.features != parts[0].features for p in parts):
+            raise ValueError("cannot concatenate explanations over different features")
+        return Explanations(pd.concat([p.meta for p in parts], ignore_index=True), np.vstack([p.attr for p in parts]),
+                            np.vstack([p.raw for p in parts]), parts[0].features)  # fmt: skip
 
 
-def from_long(df: pd.DataFrame) -> Explanations:
-    """Pivot long-format attributions to wide form, matching columns by feature name."""
+def from_long(df: pd.DataFrame, fill_missing: bool = False) -> Explanations:
+    """Pivot long-format attributions to wide form, matching columns by feature name.
+
+    With ``fill_missing``, metrics a model did not use (e.g. removed by feature
+    selection) get attribution 0 and a NaN raw value; otherwise all 20 are required."""
     df = df.copy()
     for c in ("split_id", "project", "model", "method", "feature"):
         df[c] = df[c].astype(str)
-    if set(df["feature"]) != set(FEATURES):
+    if not set(df["feature"]) <= set(FEATURES) or (not fill_missing and set(df["feature"]) != set(FEATURES)):
         raise ValueError("attributions must cover exactly the 20 metrics")
     attr = df.pivot(index=KEYS, columns="feature", values="attribution").reindex(columns=FEATURES)
     raw = df.pivot(index=KEYS, columns="feature", values="feature_value_raw").reindex(columns=FEATURES)
     meta = df.drop_duplicates(KEYS).set_index(KEYS)[[c for c in META if c not in KEYS]].reindex(attr.index)
+    if fill_missing:
+        attr = attr.fillna(0.0)
     if attr.isna().any().any():
         raise ValueError("incomplete attributions: some instance lacks some feature")
     return Explanations(meta.reset_index(), attr.to_numpy(dtype="float64"), raw.to_numpy(dtype="float64"))
 
 
-def load_explanations(root: Path, models=None, methods=None, seeds=None) -> Explanations:
+def load_explanations(root: Path, models=None, methods=None, seeds=None, fill_missing: bool = False) -> Explanations:
     """Load (part of) the attribution store in wide form, one file at a time."""
     root = Path(root)
     files = sorted(
@@ -113,7 +126,7 @@ def load_explanations(root: Path, models=None, methods=None, seeds=None) -> Expl
     )
     if not files:
         raise FileNotFoundError(f"no attributions under {root}; run scripts.run_explanations first")
-    out = Explanations.concat([from_long(pd.read_parquet(f)) for f in files])
+    out = Explanations.concat([from_long(pd.read_parquet(f), fill_missing) for f in files])
     logger.info("Loaded %d explanations (%d files) from %s.", len(out), len(files), root)
     return out
 
@@ -169,20 +182,21 @@ def group_mask(meta: pd.DataFrame, group: str) -> np.ndarray:
     return (meta["outcome"].astype(str) == group).to_numpy()
 
 
-def global_importance(ex: Explanations, groups=GROUPS) -> pd.DataFrame:
+def global_importance(ex: Explanations, groups=GROUPS, by=("model", "method")) -> pd.DataFrame:
     """Mean normalised |attribution| per feature, with ranks (1 = most important)."""
-    norm = pd.DataFrame(normalised_abs(ex.attr), columns=FEATURES)
+    by = list(by)
+    norm = pd.DataFrame(normalised_abs(ex.attr), columns=ex.features)
     parts = []
     for g in groups:
         mask = group_mask(ex.meta, g)
         if not mask.any():
             continue
-        agg = aggregate(ex.meta[mask], norm[mask]).rename(columns={"column": "feature", "value": "importance"})
+        agg = aggregate(ex.meta[mask], norm[mask], by).rename(columns={"column": "feature", "value": "importance"})
         parts.append(agg.assign(group=g))
     out = pd.concat(parts, ignore_index=True)
-    out["rank"] = out.groupby(["model", "method", "group", "scope"])["importance"].rank(ascending=False, method="min")
+    out["rank"] = out.groupby(by + ["group", "scope"])["importance"].rank(ascending=False, method="min")
     out["rank"] = out["rank"].astype(int)
-    return out[["model", "method", "group", "scope", "feature", "importance", "rank", "n_splits"]]
+    return out[by + ["group", "scope", "feature", "importance", "rank", "n_splits"]]
 
 
 def importance_matrix(imp: pd.DataFrame, group: str = "all", scope: str = "ALL") -> pd.DataFrame:
@@ -208,27 +222,29 @@ def _spearman_columns(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         return np.where(den > 0, (rx * ry).sum(axis=0) / den, np.nan)
 
 
-def direction(ex: Explanations, threshold: float = 0.1) -> pd.DataFrame:
+def direction(ex: Explanations, threshold: float = 0.1, by=("model", "method")) -> pd.DataFrame:
     """Per (model, method, feature): Spearman(raw value, signed attribution) and the
     mean signed normalised attribution, aggregated like the importances (ALL and per
     project). ``direction`` is '+', '−' or '0' (|rho| < ``threshold``)."""
-    keys = ["model", "method", "project", "split_id", "seed"]
+    by = list(by)
+    feats = ex.features
+    keys = by + ["project", "split_id", "seed"]
     rows = []
     for key, idx in ex.meta.groupby(keys, observed=True, sort=False).indices.items():
         rho = _spearman_columns(ex.raw[idx], ex.attr[idx])
-        rows.append(dict(zip(keys, key)) | dict(zip(FEATURES, rho)))
+        rows.append(dict(zip(keys, key)) | dict(zip(feats, rho)))
     rho = pd.DataFrame(rows)
     meta = rho[keys]
-    agg_rho = aggregate(meta, rho[FEATURES]).rename(columns={"column": "feature", "value": "spearman"})
-    pos = aggregate(meta, (rho[FEATURES] > 0).astype(float).where(rho[FEATURES].notna()))
+    agg_rho = aggregate(meta, rho[feats], by).rename(columns={"column": "feature", "value": "spearman"})
+    pos = aggregate(meta, (rho[feats] > 0).astype(float).where(rho[feats].notna()), by)
     pos = pos.rename(columns={"column": "feature", "value": "share_splits_positive"}).drop(columns="n_splits")
-    agg_rho = agg_rho.merge(pos, on=["model", "method", "scope", "feature"])
+    agg_rho = agg_rho.merge(pos, on=by + ["scope", "feature"])
     s = np.abs(ex.attr).sum(axis=1, keepdims=True)
     with np.errstate(invalid="ignore", divide="ignore"):
-        signed = pd.DataFrame(np.where(s > 0, ex.attr / s, np.nan), columns=FEATURES)
-    mean_signed = aggregate(ex.meta, signed).rename(columns={"column": "feature", "value": "mean_signed_attribution"})
-    out = agg_rho.merge(mean_signed[["model", "method", "scope", "feature", "mean_signed_attribution"]],
-                        on=["model", "method", "scope", "feature"])  # fmt: skip
+        signed = pd.DataFrame(np.where(s > 0, ex.attr / s, np.nan), columns=feats)
+    mean_signed = aggregate(ex.meta, signed, by).rename(columns={"column": "feature", "value": "mean_signed_attribution"})
+    out = agg_rho.merge(mean_signed[by + ["scope", "feature", "mean_signed_attribution"]],
+                        on=by + ["scope", "feature"])  # fmt: skip
     out["direction"] = np.select([out["spearman"] >= threshold, out["spearman"] <= -threshold], ["+", "−"], "0")
     return out
 
@@ -251,18 +267,35 @@ def direction_disagreements(dirs: pd.DataFrame, scope: str = "ALL") -> pd.DataFr
 # --------------------------------------------------------------------- c) size share
 
 
-def size_share(ex: Explanations, size_group=SIZE_GROUP) -> pd.DataFrame:
-    """Share of normalised |attribution| on loc and on the size group, and the
-    percentage of instances whose top-1 feature is loc."""
+def size_share(ex: Explanations, size_group=SIZE_GROUP, by=("model", "method"), loc: str = "loc") -> pd.DataFrame:
+    """Share of normalised |attribution| on ``loc`` and on the size group, and the
+    percentage of instances whose top-1 feature is ``loc`` (names in ``ex.features``)."""
     norm = normalised_abs(ex.attr)
-    j_loc = FEATURES.index("loc")
-    cols = [FEATURES.index(f) for f in size_group]
+    j_loc = ex.features.index(loc)
+    cols = [ex.features.index(f) for f in dict.fromkeys(size_group)]
     top1 = np.argmax(np.abs(ex.attr), axis=1) == j_loc  # ties: first feature in canonical order
     vals = pd.DataFrame({"loc_share": norm[:, j_loc], "size_group_share": norm[:, cols].sum(axis=1),
                          "loc_top1_pct": 100.0 * top1})  # fmt: skip
     vals.loc[np.isnan(norm).all(axis=1), "loc_top1_pct"] = np.nan
-    agg = aggregate(ex.meta, vals)
-    return agg.pivot_table(index=["model", "method", "scope"], columns="column", values="value").reset_index()
+    agg = aggregate(ex.meta, vals, by)
+    out = agg.pivot_table(index=list(by) + ["scope"], columns="column", values="value").reset_index()
+    out.columns.name = None
+    return out
+
+
+def instance_cv(ex: Explanations, seeds=(0,)) -> pd.DataFrame:
+    """How much an explanation changes between instances: per (model, method, split,
+    seed) the median over features of std/mean(|attribution|) across the test instances;
+    then the median and mean over splits."""
+    ex = ex.subset(ex.meta["seed"].isin(list(seeds)).to_numpy())
+    rows = []
+    for (model, method, split), idx in ex.meta.groupby(["model", "method", "split_id"], observed=True).indices.items():
+        a = ex.attr[idx]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            cv = a.std(axis=0, ddof=1) / np.abs(a).mean(axis=0)
+        rows.append({"model": model, "method": method, "split_id": split, "cv": float(np.nanmedian(cv))})
+    t = pd.DataFrame(rows)
+    return t.groupby(["model", "method"])["cv"].agg(median_cv="median", mean_cv="mean", n_splits="size").reset_index()
 
 
 # --------------------------------------------------------------------- d) agreement

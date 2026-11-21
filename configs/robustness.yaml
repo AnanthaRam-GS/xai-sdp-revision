@@ -1,0 +1,40 @@
+# Step 5: robustness and sensitivity of the explanations.
+model_seed: 0                  # the studies use the seed-0 models of main_time_aware
+n_jobs: 10
+max_hours: 8
+output_dir: robustness         # under the artifacts directory
+
+lime:
+  models: [mlp, lr, rf, xgb]
+  instances_per_group: 10      # TP/FP/FN/TN, up to 40 per split
+  reduced_instances_per_split: 20
+  runs: 10                     # random_state 0..9 for the run-to-run study
+  main: {num_samples: 5000, num_features: 20, sample_around_instance: true, discretize_continuous: false}
+  grid:
+    num_samples: [1000, 2000, 5000, 10000]
+    kernel_width_factor: [0.5, 0.75, 1.0, 2.0]   # x sqrt(20); 0.75 is LIME's default
+    sampling: [mean, instance, quartile]
+
+background:
+  models: {mlp: [DeepLiftShap, GradientShap], rf: [TreeSHAP], xgb: [TreeSHAP]}
+  sizes: [10, 25, 50, 100, 200, all]
+  schemes: [stratified, random, kmeans, defective, clean]
+  draws: [0, 1, 2, 3, 4]
+  main_size: 100
+  reduced_projects: [ant, camel, jedit, poi, xalan]
+
+preprocessing:
+  experiment: ablation_preprocessing
+  settings: [none, standard, log_standard]
+  models: [mlp, lr]
+  methods:
+    mlp: [DeepLiftShap, DeepLift]
+    lr: [LinearSHAP]
+  zero_baseline: none          # DeepLift_zero_baseline for the MLP with this preprocessing only
+
+collinearity:
+  threshold: 0.7               # |Spearman rho|
+  vif_threshold: 5
+  stable_share: 0.75           # pairs clustered together in >= 75% of training releases
+  linkage: average
+  retrain_experiment: autospearman_time_aware

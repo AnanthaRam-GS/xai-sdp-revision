@@ -83,9 +83,12 @@ class ExplainContext:
     y_prob: np.ndarray = field(init=False)
 
     def __post_init__(self):
-        for frame in (self.X_train, self.X_test, self.X_test_raw, self.background):
-            if list(frame.columns) != list(FEATURES):
-                raise ValueError("explainer inputs must have the 20 metrics in canonical order")
+        cols = list(self.X_test.columns)
+        if not cols or cols != [f for f in FEATURES if f in cols]:
+            raise ValueError("explainer inputs must hold metrics in canonical order")
+        for frame in (self.X_train, self.X_test_raw, self.background):
+            if list(frame.columns) != cols:
+                raise ValueError("all explainer inputs must have the same metrics")
         self.y_prob = self.predict(self.X_test.to_numpy())
 
     @property
@@ -100,7 +103,7 @@ class ExplainContext:
         """P(defective) for rows in model input space (array or DataFrame)."""
         from sdp.models.registry import positive_proba
 
-        X = pd.DataFrame(np.asarray(X, dtype="float64"), columns=FEATURES)
+        X = pd.DataFrame(np.asarray(X, dtype="float64"), columns=self.feature_names)
         return positive_proba(self.model, X)
 
     def predict_proba(self, X) -> np.ndarray:
@@ -125,9 +128,10 @@ class MethodResult:
     def __post_init__(self):
         if self.output_scale not in OUTPUT_SCALES:
             raise ValueError(f"unknown output scale {self.output_scale!r}")
-        if set(self.attributions.columns) != set(FEATURES):
-            raise ValueError(f"{self.method}: attributions must be labelled with the 20 metric names")
-        self.attributions = self.attributions[FEATURES]  # canonical order, matched by name
+        cols = set(self.attributions.columns)
+        if not cols or not cols <= set(FEATURES) or len(cols) != self.attributions.shape[1]:
+            raise ValueError(f"{self.method}: attributions must be labelled with metric names")
+        self.attributions = self.attributions[[f for f in FEATURES if f in cols]]  # canonical order, by name
 
 
 class Explainer(ABC):
@@ -164,6 +168,17 @@ def check_frame(ctx: ExplainContext, method: str, check: str, output, reference,
         "seed": ctx.seed, "instance_id": np.arange(len(output)), "check": check, "output": output,
         "reference": reference, "attribution_sum": attr_sum, "error": np.abs(attr_sum - (output - reference)),
     })[CHECK_COLUMNS]  # fmt: skip
+
+
+def subset_context(ctx: ExplainContext, idx) -> ExplainContext:
+    """The same context restricted to the test instances at positions ``idx``."""
+    import dataclasses
+
+    idx = np.asarray(idx, dtype=int)
+    return dataclasses.replace(
+        ctx, X_test=ctx.X_test.iloc[idx].reset_index(drop=True), X_test_raw=ctx.X_test_raw.iloc[idx].reset_index(drop=True),
+        class_name=np.asarray(ctx.class_name)[idx], y_true=np.asarray(ctx.y_true)[idx], loc=np.asarray(ctx.loc)[idx],
+    )  # fmt: skip
 
 
 # ---------------------------------------------------------------- background set
