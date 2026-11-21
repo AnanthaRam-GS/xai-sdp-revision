@@ -1,0 +1,15 @@
+explanation,rank (all 14),rank within model
+MLP-DeepLift,2,1
+MLP-DeepLiftShap,1,1
+MLP-GradientShap,2,1
+MLP-IntegratedGradients,2,1
+MLP-Saliency,4,2
+MLP-InputXGradient,2,1
+MLP-LIME,3,2
+MLP-KernelSHAP,1,1
+LR-LinearSHAP,1,1
+LR-LIME,3,2
+RF-TreeSHAP,1,1
+RF-LIME,5,2
+XGB-TreeSHAP,1,1
+XGB-LIME,5,2

@@ -1,0 +1,15 @@
+explanation,deletion gain,insertion gain
+MLP-DeepLift,2,1
+MLP-DeepLiftShap,1,1
+MLP-GradientShap,1,1
+MLP-IntegratedGradients,2,1
+MLP-Saliency,2,1
+MLP-InputXGradient,2,1
+MLP-LIME,2,1
+MLP-KernelSHAP,1,1
+LR-LinearSHAP,1,1
+LR-LIME,1,1
+RF-TreeSHAP,1,1
+RF-LIME,2,2
+XGB-TreeSHAP,1,1
+XGB-LIME,2,2
