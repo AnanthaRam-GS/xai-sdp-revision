@@ -14,7 +14,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from sdp.config import REPO_ROOT, Config
+from sdp.config import CONFIG_DIR, Config, REPO_ROOT
 from sdp.eval.splits import Split
 from sdp.experiments.persistence import safe_split_id
 from sdp.explain.base import ExplainContext
@@ -22,7 +22,7 @@ from sdp.explain.runner import ExplainSettings, build_context, build_jobs
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SETTINGS = REPO_ROOT / "configs" / "robustness.yaml"
+DEFAULT_SETTINGS = CONFIG_DIR / "robustness.yaml"
 
 
 def load_robustness(path: str | Path = DEFAULT_SETTINGS) -> dict:

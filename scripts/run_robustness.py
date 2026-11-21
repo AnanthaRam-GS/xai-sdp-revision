@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.experiments.config import load_experiment
 from sdp.experiments.engine import run_experiment
 from sdp.explain.runner import build_jobs, experiment_splits, load_explain_settings, run_explanations
@@ -46,9 +46,10 @@ STUDIES = ("lime", "background", "preprocessing", "autospearman")
 
 def autospearman_settings(es, rs):
     exp = rs["collinearity"]["retrain_experiment"]
+    seeds = list(load_experiment(CONFIG_DIR / "experiments" / f"{exp}.yaml").seeds)
     return dataclasses.replace(
         es, experiment=exp, models={"mlp": "log_standard", "rf": "standard"},
-        methods={"mlp": ["DeepLiftShap"], "rf": ["TreeSHAP"]}, seeds=[0, 1, 2], expensive_methods=[],
+        methods={"mlp": ["DeepLiftShap"], "rf": ["TreeSHAP"]}, seeds=seeds, expensive_methods=[],
         output_dir=f"attributions_{exp}",
     )  # fmt: skip
 
@@ -118,8 +119,8 @@ def smoke_and_estimate(cfg, es, rs, splits, frames, n_jobs: int, studies) -> dic
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--studies", nargs="+", default=list(STUDIES), choices=STUDIES)
-    parser.add_argument("--settings", default=str(REPO_ROOT / "configs" / "robustness.yaml"))
-    parser.add_argument("--explain-settings", default=str(REPO_ROOT / "configs" / "explain.yaml"))
+    parser.add_argument("--settings", default=str(CONFIG_DIR / "robustness.yaml"))
+    parser.add_argument("--explain-settings", default=str(CONFIG_DIR / "explain.yaml"))
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--n-jobs", type=int, default=None)
     parser.add_argument("--smoke", action="store_true")
@@ -182,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
         timings["preprocessing"] = time.perf_counter() - t0
     if "autospearman" in args.studies:
         t0 = time.perf_counter()
-        exp = load_experiment(REPO_ROOT / "configs" / "experiments" / f"{rs['collinearity']['retrain_experiment']}.yaml")
+        exp = load_experiment(CONFIG_DIR / "experiments" / f"{rs['collinearity']['retrain_experiment']}.yaml")
         run_experiment(cfg, exp, n_jobs=n_jobs)
         timings["autospearman_training"] = time.perf_counter() - t0
         t1 = time.perf_counter()

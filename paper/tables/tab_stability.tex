@@ -1,0 +1,17 @@
+% Suggested caption: Sources of variation (mean Spearman $\rho$; higher = more stable): explainer randomness (LIME runs or background draws, instance level), training seed, consecutive releases, data-only reference (permuted-label models), projects; and the share of test instances whose predicted label changes between seeds. Random null 95th percentile: 0.373.
+% Source: reports/step7_seed_stability.md, reports/step7_cross_version.md
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Explanation & Explainer randomness & Seed (global) & Release & Data-only & Project & Label changes across seeds (\%) \\
+\midrule
+MLP-DeepLiftShap & 0.963 & 0.577 & 0.162 & 0.094 & 0.087 & 35.30 \\
+MLP-KernelSHAP & -- & 0.612 & 0.158 & 0.086 & 0.073 & 35.30 \\
+MLP-IntegratedGradients & -- & 0.544 & 0.171 & 0.115 & 0.082 & 35.30 \\
+MLP-LIME & 0.991 & 0.570 & 0.046 & 0.110 & 0.055 & 35.30 \\
+MLP-Saliency & -- & 0.527 & 0.038 & 0.070 & 0.072 & 35.30 \\
+LR-LinearSHAP & -- & 0.792 & 0.271 & -0.058 & 0.065 & 23.74 \\
+RF-TreeSHAP & 0.972 & 0.923 & 0.512 & 0.390 & 0.456 & 26.17 \\
+XGB-TreeSHAP & 0.974 & 0.833 & 0.521 & 0.325 & 0.377 & 33.17 \\
+\bottomrule
+\end{tabular}

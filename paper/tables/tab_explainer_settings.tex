@@ -1,0 +1,19 @@
+% Suggested caption: Explainer configurations (step 4 v2). All explain P(defective) in the model's input space except LinearSHAP (log-odds).
+% Source: configs/explain.yaml, reports/step4_global_importance.md
+\small
+\begin{tabular}{llllp{5cm}l}
+\toprule
+Explainer & Models & Background & Baseline / reference & Settings & Seeds \\
+\midrule
+DeepLift & MLP & 100 training rows, stratified & background mean & -- & 0--9 \\
+DeepLiftShap & MLP & 100 training rows, stratified & each background row & -- & 0--9 \\
+GradientShap & MLP & 100 training rows, stratified & background rows & 50 samples, $\sigma = 0.0$ & 0--9 \\
+IntegratedGradients & MLP & 100 training rows, stratified & background mean & 512 Gauss--Legendre steps & 0--9 \\
+Saliency & MLP & -- & -- & signed gradient & 0--9 \\
+InputXGradient & MLP & -- & -- & input $\times$ gradient & 0--9 \\
+KernelSHAP & MLP & 100 training rows, stratified & background rows & 1000 samples, no $\ell_1$ selection & 0--2 \\
+LIME & all & training data (statistics) & -- & 5000 samples, kernel width $0.75\sqrt{20}$, around the instance, no discretisation & 0--2 \\
+TreeSHAP & RF, XGB & 100 training rows, stratified & background rows (interventional) & probability output & 0--9 \\
+LinearSHAP & LR & 100 training rows, stratified & background rows (interventional) & log-odds output & 0--9 \\
+\bottomrule
+\end{tabular}

@@ -34,7 +34,8 @@ from sdp.eval.metrics import roc_auc
 from sdp.eval.preprocess import feature_frame
 from sdp.experiments.persistence import artifact_dir
 from sdp.explain.runner import EXPLAINERS, ExplainSettings
-from sdp.fidelity.common import ABSOLUTE, EVALUATED, refit, store_attributions
+from sdp.explain.base import subset_context
+from sdp.fidelity.common import ABSOLUTE, EVALUATED, refit, store_attributions_by_id
 from sdp.robustness.common import seed_context
 
 logger = logging.getLogger(__name__)
@@ -100,8 +101,8 @@ def cascade_job(cfg: Config, es: ExplainSettings, split, df: pd.DataFrame, seed:
     for k, (kind, (stage, positions)) in enumerate(stages):
         rctx = dataclasses.replace(ctx, model=randomised_model(ctx.model, positions, seed=1000 * seed + k))
         for method in EVALUATED["mlp"]:
-            orig = store_attributions(es.root(cfg), split.split_id, "mlp", method, seed)
-            sim = similarity(orig, _explain(es, rctx, method))
+            ids, orig = store_attributions_by_id(es.root(cfg), split.split_id, "mlp", method, seed)
+            sim = similarity(orig, _explain(es, subset_context(rctx, ids), method))
             rows.append({"split_id": split.split_id, "project": split.project, "model": "mlp", "method": method,
                          "kind": kind, "stage": stage, "n_layers": len(positions), "n_linear": len(linear_positions(ctx.model)),
                          "spearman": float(np.nanmean(sim["spearman"])), "fa5": float(np.nanmean(sim["fa5"])),
@@ -127,8 +128,8 @@ def data_randomisation_job(cfg: Config, es: ExplainSettings, split, df: pd.DataF
     auc = roc_auc(ctx.y_true, rctx.y_prob)
     rows = []
     for method in EVALUATED[model]:
-        orig = store_attributions(es.root(cfg), split.split_id, model, method, seed)
-        sim = similarity(orig, _explain(es, rctx, method))
+        ids, orig = store_attributions_by_id(es.root(cfg), split.split_id, model, method, seed)
+        sim = similarity(orig, _explain(es, subset_context(rctx, ids), method))
         rows.append({"split_id": split.split_id, "project": split.project, "model": model, "method": method,
                      "kind": "data", "stage": "permuted labels", "spearman": float(np.nanmean(sim["spearman"])),
                      "fa5": float(np.nanmean(sim["fa5"])), "permuted_auc": auc, "n_instances": len(orig)})  # fmt: skip

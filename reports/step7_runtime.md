@@ -31,9 +31,9 @@ Smoke test: 4 splits, 39 s; estimated full run 3.9 min. Full run: 1.4 min (singl
 
 | part | smoke (s) | full (s) |
 |---|---|---|
-| load | 29.6 | 28.8 |
-| cross_version | 2.3 | 11.1 |
+| load | 29.6 | 28.5 |
+| cross_version | 2.3 | 10.8 |
 | unchanged | 0.2 | 1.1 |
-| seeds | 2.3 | 14.2 |
+| seeds | 2.3 | 13.9 |
 | projects | 0.0 | 0.5 |
-| drift | 5.0 | 29.8 |
+| drift | 5.0 | 29.0 |

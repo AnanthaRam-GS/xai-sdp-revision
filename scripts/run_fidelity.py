@@ -26,7 +26,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.experiments.persistence import artifact_dir, safe_split_id
 from sdp.explain.base import partition_path
 from sdp.explain.runner import experiment_splits, load_explain_settings
@@ -140,7 +140,7 @@ def estimate(smoke: dict, splits, smoke_split, fs: dict, n_jobs: int) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--parts", nargs="+", default=list(PARTS), choices=PARTS)
-    parser.add_argument("--settings", default=str(REPO_ROOT / "configs" / "fidelity.yaml"))
+    parser.add_argument("--settings", default=str(CONFIG_DIR / "fidelity.yaml"))
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--n-jobs", type=int, default=None)
     parser.add_argument("--smoke", action="store_true")
@@ -149,7 +149,7 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging()
     cfg = load_config(args.config)
     set_seed(cfg.seed)
-    es = load_explain_settings(REPO_ROOT / "configs" / "explain.yaml")
+    es = load_explain_settings(CONFIG_DIR / "explain.yaml")
     fs = yaml.safe_load(Path(args.settings).read_text(encoding="utf-8"))
     n_jobs = args.n_jobs or fs.get("n_jobs", 10)
     splits, frames = experiment_splits(cfg, es)

@@ -1,0 +1,15 @@
+% Suggested caption: Models retrained on the AutoSpearman-selected metrics vs all 20 metrics (seeds 0--2; per-split means; Wilcoxon signed-rank, Holm).
+% Source: reports/step5_collinearity.md
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Model & Metric & AutoSpearman & All 20 metrics & $p_{\mathrm{Holm}}$ & Cliff's $\delta$ \\
+\midrule
+MLP & AUC & 0.680 & 0.682 & 1.000 & -0.002 \\
+MLP & MCC@tuned & 0.228 & 0.227 & 1.000 & -0.017 \\
+MLP & Popt & 0.768 & 0.768 & 1.000 & -0.010 \\
+RF & AUC & 0.678 & 0.678 & 0.584 & 0.010 \\
+RF & MCC@tuned & 0.224 & 0.251 & 0.049 & -0.163 \\
+RF & Popt & 0.755 & 0.740 & 0.579 & 0.062 \\
+\bottomrule
+\end{tabular}

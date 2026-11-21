@@ -17,7 +17,7 @@ import pandas as pd
 
 from sdp.analysis import explanations as E
 from sdp.analysis import step5
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.explain.runner import experiment_splits, load_explain_settings
 from sdp.log import setup_logging
 from sdp.robustness.common import load_robustness
@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     setup_logging()
     cfg = load_config(args.config)
-    es = load_explain_settings(REPO_ROOT / "configs" / "explain.yaml")
+    es = load_explain_settings(CONFIG_DIR / "explain.yaml")
     rs = load_robustness()
     info_path = cfg.paths.results_dir / "robustness" / "run_info.json"
     info = json.loads(info_path.read_text(encoding="utf-8")) if info_path.exists() else {}

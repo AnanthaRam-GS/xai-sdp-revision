@@ -26,3 +26,9 @@ data/legacy/
 .DS_Store
 .idea/
 .vscode/
+
+# quick reproduction and replication archive
+results_quick/
+reports_quick/
+artifacts_quick/
+dist/

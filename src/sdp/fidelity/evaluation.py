@@ -26,7 +26,7 @@ from sdp.config import Config
 from sdp.experiments.persistence import safe_split_id
 from sdp.explain.base import OUTCOMES
 from sdp.explain.runner import ExplainSettings
-from sdp.fidelity.common import EVALUATED, store_attributions
+from sdp.fidelity.common import EVALUATED, store_attributions_by_id
 from sdp.fidelity.curves import evaluate_orders
 from sdp.fidelity.faithfulness import faithfulness, prediction_drops, random_subsets
 from sdp.fidelity.removal import MarginalRemover, MeanRemover, select_background
@@ -58,11 +58,15 @@ def curves_job(cfg: Config, es: ExplainSettings, split, df: pd.DataFrame, model:
     t0 = time.perf_counter()
     ctx = seed_context(cfg, es, split, {split.project: df}, model, seed)
     outcome = ctx.outcome
-    idx = sample_by_outcome(outcome, fs.get("sample_per_split"), job_seed(split.split_id))
+    stored = {m: store_attributions_by_id(es.root(cfg), split.split_id, model, m, seed) for m in EVALUATED[model]}
+    common = np.arange(len(outcome))
+    for ids, _ in stored.values():  # methods explained on a subset limit the common instances
+        common = common[np.isin(common, ids)]
+    idx = common[sample_by_outcome(outcome[common], fs.get("sample_per_split"), job_seed(split.split_id))]
     X = ctx.X_test.to_numpy(dtype="float64")[idx]
     p = ctx.y_prob[idx]
     pred = p >= ctx.threshold
-    attrs = {m: store_attributions(es.root(cfg), split.split_id, model, m, seed)[idx] for m in EVALUATED[model]}
+    attrs = {m: a[np.searchsorted(ids, idx)] for m, (ids, a) in stored.items()}
     B = select_background(ctx.background, fs["n_background"], seed)
     marginal = MarginalRemover(ctx.predict, B)
     rs = job_seed(split.split_id, model)

@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+import os
 from pathlib import Path
 
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CONFIG = REPO_ROOT / "configs" / "default.yaml"
+# All configuration files are read from CONFIG_DIR; ``SDP_CONFIG_DIR`` selects another set
+# (e.g. ``configs/quick`` for the reduced reproduction, which writes to separate folders).
+CONFIG_DIR = Path(os.environ.get("SDP_CONFIG_DIR", REPO_ROOT / "configs")).resolve()
+DEFAULT_CONFIG = CONFIG_DIR / "default.yaml"
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,17 @@
+% Suggested caption: Robustness of the explanations (Spearman $\rho$ with the main setting). LIME rows: repeat = 10 random states; A = mean sampling (v1), B = quartile discretisation, C = 1000 samples. Background rows: repeat = 5 independent draws of 100; A = 10 rows, B = defective rows only, C = k-means centres.
+% Source: reports/step5_lime_stability.md, reports/step5_background_sensitivity.md
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Part & Model / explanation & Repeat $\rho$ & Top-1 changes (\%) & Variant A $\rho$ & Variant B $\rho$ & Variant C $\rho$ \\
+\midrule
+LIME & MLP & 0.991 & 10.28 & 0.772 & 0.470 & 0.981 \\
+LIME & LR & 0.995 & 11.46 & 0.997 & 0.686 & 0.990 \\
+LIME & RF & 0.943 & 11.88 & 0.728 & 0.508 & 0.895 \\
+LIME & XGB & 0.920 & 10.71 & 0.755 & 0.551 & 0.857 \\
+Background & MLP-DeepLiftShap & 0.963 & -- & 0.822 & 0.744 & 0.978 \\
+Background & MLP-GradientShap & 0.861 & -- & 0.752 & 0.687 & 0.861 \\
+Background & RF-TreeSHAP & 0.972 & -- & 0.881 & 0.646 & 0.956 \\
+Background & XGB-TreeSHAP & 0.974 & -- & 0.900 & 0.808 & 0.962 \\
+\bottomrule
+\end{tabular}

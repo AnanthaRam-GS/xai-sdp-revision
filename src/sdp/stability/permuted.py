@@ -30,7 +30,8 @@ from sdp.eval.preprocess import feature_frame
 from sdp.experiments.persistence import artifact_dir, safe_split_id, save_artifact
 from sdp.explain.base import partition_path, to_long, write_long
 from sdp.explain.runner import EXPLAINERS, ExplainSettings
-from sdp.fidelity.common import ABSOLUTE, EVALUATED, refit, store_attributions
+from sdp.explain.base import subset_context
+from sdp.fidelity.common import ABSOLUTE, EVALUATED, refit, store_attributions_by_id
 from sdp.fidelity.sanity import permuted_labels, similarity
 from sdp.robustness.common import seed_context
 
@@ -65,12 +66,15 @@ def permuted_job(cfg: Config, es: ExplainSettings, split, df: pd.DataFrame, mode
     root = permuted_root(es.root(cfg))
     rows = []
     for method in EVALUATED[model]:
-        res = EXPLAINERS[method](**es.method_params(method)).explain(rctx)
-        write_long(to_long(rctx, res).assign(subset=SUBSET),
+        ids, orig = store_attributions_by_id(es.root(cfg), split.split_id, model, method, seed)
+        full = np.array_equal(ids, np.arange(len(rctx.X_test)))
+        use = rctx if full else subset_context(rctx, ids)  # same instances as the stored explanation
+        res = EXPLAINERS[method](**es.method_params(method)).explain(use)
+        write_long(to_long(use, res, None if full else ids).assign(subset=SUBSET),
                    partition_path(root, model, method, safe_split_id(split.split_id), seed))  # fmt: skip
         new = res.attributions.to_numpy()
         new = np.abs(new) if method in ABSOLUTE else new
-        sim = similarity(store_attributions(es.root(cfg), split.split_id, model, method, seed), new)
+        sim = similarity(orig, new)
         rows.append({"split_id": split.split_id, "model": model, "method": method, "permuted_auc": auc,
                      "spearman": float(np.nanmean(sim["spearman"])), "fa5": float(np.nanmean(sim["fa5"]))})  # fmt: skip
     return {"rows": rows, "timing": {"split_id": split.split_id, "model": model, "time_s": time.perf_counter() - t0}}

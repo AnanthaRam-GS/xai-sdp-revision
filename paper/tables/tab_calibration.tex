@@ -1,0 +1,21 @@
+% Suggested caption: Calibration before and after Platt scaling and isotonic regression fitted on the validation split (mean [95% CI] over splits).
+% Source: reports/step8_calibration.md
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Model & Method & ECE & Brier & NLL & AUC & MCC@tuned \\
+\midrule
+MLP & uncalibrated & 0.221\,{\scriptsize[0.182, 0.261]} & 0.236\,{\scriptsize[0.217, 0.256]} & 0.686\,{\scriptsize[0.636, 0.743]} & 0.686\,{\scriptsize[0.644, 0.725]} & 0.234\,{\scriptsize[0.177, 0.288]} \\
+MLP & platt & 0.196\,{\scriptsize[0.139, 0.258]} & 0.230\,{\scriptsize[0.192, 0.271]} & 0.703\,{\scriptsize[0.599, 0.823]} & 0.676\,{\scriptsize[0.635, 0.716]} & 0.225\,{\scriptsize[0.168, 0.282]} \\
+MLP & isotonic & 0.218\,{\scriptsize[0.161, 0.275]} & 0.247\,{\scriptsize[0.205, 0.292]} & 3.298\,{\scriptsize[2.054, 4.779]} & 0.671\,{\scriptsize[0.632, 0.708]} & 0.234\,{\scriptsize[0.177, 0.288]} \\
+LR & uncalibrated & 0.227\,{\scriptsize[0.191, 0.267]} & 0.232\,{\scriptsize[0.218, 0.248]} & 0.667\,{\scriptsize[0.632, 0.707]} & 0.687\,{\scriptsize[0.642, 0.729]} & 0.240\,{\scriptsize[0.183, 0.296]} \\
+LR & platt & 0.186\,{\scriptsize[0.128, 0.249]} & 0.227\,{\scriptsize[0.188, 0.267]} & 0.686\,{\scriptsize[0.581, 0.804]} & 0.687\,{\scriptsize[0.642, 0.729]} & 0.240\,{\scriptsize[0.183, 0.296]} \\
+LR & isotonic & 0.210\,{\scriptsize[0.155, 0.268]} & 0.244\,{\scriptsize[0.201, 0.289]} & 3.335\,{\scriptsize[2.002, 4.926]} & 0.673\,{\scriptsize[0.631, 0.714]} & 0.240\,{\scriptsize[0.183, 0.296]} \\
+RF & uncalibrated & 0.220\,{\scriptsize[0.182, 0.261]} & 0.235\,{\scriptsize[0.208, 0.266]} & 0.798\,{\scriptsize[0.639, 1.027]} & 0.676\,{\scriptsize[0.626, 0.722]} & 0.247\,{\scriptsize[0.193, 0.299]} \\
+RF & platt & 0.196\,{\scriptsize[0.141, 0.256]} & 0.233\,{\scriptsize[0.195, 0.273]} & 0.749\,{\scriptsize[0.611, 0.927]} & 0.653\,{\scriptsize[0.597, 0.707]} & 0.233\,{\scriptsize[0.175, 0.289]} \\
+RF & isotonic & 0.220\,{\scriptsize[0.166, 0.276]} & 0.248\,{\scriptsize[0.207, 0.289]} & 3.460\,{\scriptsize[2.380, 4.798]} & 0.665\,{\scriptsize[0.623, 0.706]} & 0.247\,{\scriptsize[0.193, 0.299]} \\
+XGB & uncalibrated & 0.213\,{\scriptsize[0.171, 0.259]} & 0.234\,{\scriptsize[0.206, 0.265]} & 0.703\,{\scriptsize[0.616, 0.815]} & 0.675\,{\scriptsize[0.630, 0.717]} & 0.228\,{\scriptsize[0.178, 0.276]} \\
+XGB & platt & 0.195\,{\scriptsize[0.137, 0.256]} & 0.232\,{\scriptsize[0.194, 0.272]} & 0.705\,{\scriptsize[0.604, 0.825]} & 0.652\,{\scriptsize[0.597, 0.703]} & 0.212\,{\scriptsize[0.153, 0.269]} \\
+XGB & isotonic & 0.217\,{\scriptsize[0.161, 0.276]} & 0.248\,{\scriptsize[0.207, 0.289]} & 3.086\,{\scriptsize[2.127, 4.123]} & 0.666\,{\scriptsize[0.626, 0.704]} & 0.228\,{\scriptsize[0.178, 0.276]} \\
+\bottomrule
+\end{tabular}

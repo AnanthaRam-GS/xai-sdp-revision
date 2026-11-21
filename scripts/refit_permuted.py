@@ -22,7 +22,7 @@ import time
 
 import pandas as pd
 
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.explain.runner import experiment_splits, load_explain_settings
 from sdp.log import setup_logging
 from sdp.robustness.common import run_parallel
@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging()
     cfg = load_config(args.config)
     set_seed(cfg.seed)
-    es = load_explain_settings(REPO_ROOT / "configs" / "explain.yaml")
+    es = load_explain_settings(CONFIG_DIR / "explain.yaml")
     splits, frames = experiment_splits(cfg, es)
     if args.projects:
         splits = [s for s in splits if s.project in args.projects]

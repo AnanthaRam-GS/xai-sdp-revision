@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.config import CONFIG_DIR, DEFAULT_CONFIG, REPO_ROOT, load_config
 from sdp.data.clean import ID_COL, LABEL_COL
 from sdp.eval.preprocess import feature_frame
 from sdp.explain.runner import experiment_splits, load_explain_settings
@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging()
     cfg = load_config(args.config)
     set_seed(cfg.seed)
-    es = load_explain_settings(REPO_ROOT / "configs" / "explain.yaml")
+    es = load_explain_settings(CONFIG_DIR / "explain.yaml")
     rs = load_robustness()
     all_splits, frames = experiment_splits(cfg, es)
     splits = [s for s in all_splits if not args.projects or s.project in args.projects]

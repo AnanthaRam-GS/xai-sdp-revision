@@ -1,0 +1,21 @@
+% Suggested caption: Preprocessing and imbalance ablations (time-aware): mean [95% CI] of AUC, MCC@tuned and Popt, and the share of normalised |attribution| on LOC and on the size group (MLP: DeepLiftShap, LR: LinearSHAP).
+% Source: reports/step3_ablation_preprocessing.md, reports/step3_ablation_imbalance.md, reports/step5_preprocessing_explanations.md
+\small
+\begin{tabular}{lllrrrrr}
+\toprule
+Ablation & Model & Setting & AUC & MCC@tuned & Popt & LOC share & Size share \\
+\midrule
+preprocessing & MLP & none & 0.657\,{\scriptsize[0.642, 0.672]} & 0.212\,{\scriptsize[0.192, 0.231]} & 0.748\,{\scriptsize[0.734, 0.762]} & 0.344 & 0.503 \\
+preprocessing & MLP & standard & 0.663\,{\scriptsize[0.649, 0.677]} & 0.213\,{\scriptsize[0.193, 0.232]} & 0.767\,{\scriptsize[0.754, 0.781]} & 0.042 & 0.197 \\
+preprocessing & MLP & log\_standard & 0.686\,{\scriptsize[0.673, 0.699]} & 0.234\,{\scriptsize[0.215, 0.251]} & 0.769\,{\scriptsize[0.756, 0.782]} & 0.060 & 0.220 \\
+preprocessing & LR & none & 0.671\,{\scriptsize[0.656, 0.685]} & 0.212\,{\scriptsize[0.193, 0.231]} & 0.764\,{\scriptsize[0.751, 0.777]} & 0.123 & 0.464 \\
+preprocessing & LR & standard & 0.670\,{\scriptsize[0.656, 0.684]} & 0.217\,{\scriptsize[0.198, 0.236]} & 0.770\,{\scriptsize[0.756, 0.783]} & 0.045 & 0.222 \\
+preprocessing & LR & log\_standard & 0.687\,{\scriptsize[0.673, 0.701]} & 0.240\,{\scriptsize[0.221, 0.257]} & 0.770\,{\scriptsize[0.755, 0.784]} & 0.068 & 0.241 \\
+imbalance & MLP & none & 0.679\,{\scriptsize[0.666, 0.692]} & 0.218\,{\scriptsize[0.200, 0.235]} & 0.754\,{\scriptsize[0.740, 0.768]} & -- & -- \\
+imbalance & MLP & class\_weight & 0.686\,{\scriptsize[0.673, 0.699]} & 0.234\,{\scriptsize[0.215, 0.251]} & 0.769\,{\scriptsize[0.756, 0.782]} & -- & -- \\
+imbalance & MLP & smote & 0.682\,{\scriptsize[0.669, 0.694]} & 0.222\,{\scriptsize[0.205, 0.238]} & 0.745\,{\scriptsize[0.730, 0.760]} & -- & -- \\
+imbalance & RF & none & 0.677\,{\scriptsize[0.662, 0.692]} & 0.238\,{\scriptsize[0.220, 0.255]} & 0.728\,{\scriptsize[0.710, 0.746]} & -- & -- \\
+imbalance & RF & class\_weight & 0.676\,{\scriptsize[0.661, 0.691]} & 0.244\,{\scriptsize[0.226, 0.261]} & 0.740\,{\scriptsize[0.724, 0.756]} & -- & -- \\
+imbalance & RF & smote & 0.670\,{\scriptsize[0.655, 0.684]} & 0.228\,{\scriptsize[0.209, 0.245]} & 0.730\,{\scriptsize[0.713, 0.748]} & -- & -- \\
+\bottomrule
+\end{tabular}
