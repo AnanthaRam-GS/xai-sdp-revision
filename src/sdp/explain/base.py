@@ -234,7 +234,9 @@ def read_attributions(root: Path, models=None, methods=None, columns=None, seeds
     files = sorted(
         f
         for f in root.glob("*/*/*.parquet")
-        if (models is None or f.parent.parent.name in models) and (methods is None or f.parent.name in methods)
+        if not f.parent.parent.name.startswith("_")  # _checks, _backgrounds, _cache
+        and (models is None or f.parent.parent.name in models)
+        and (methods is None or f.parent.name in methods)
     )
     if seeds is not None:
         files = [f for f in files if int(f.stem.rsplit("__seed_", 1)[1]) in set(seeds)]
