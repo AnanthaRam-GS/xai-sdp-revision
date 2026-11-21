@@ -201,9 +201,13 @@ def sample_background(X: pd.DataFrame, y, size: int, seed: int) -> pd.DataFrame:
 
 
 def save_background(frame: pd.DataFrame, path: Path) -> None:
+    import os
+
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.rename_axis("row").reset_index().to_parquet(path, index=False)
+    tmp = path.with_suffix(f".tmp{os.getpid()}")  # atomic: workers of other models may read it concurrently
+    frame.rename_axis("row").reset_index().to_parquet(tmp, index=False)
+    os.replace(tmp, path)
 
 
 def load_background(path: Path) -> pd.DataFrame:
@@ -238,9 +242,11 @@ def partition_path(root: Path, model: str, method: str, split_dir: str, seed: in
 def write_long(frame: pd.DataFrame, path: Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
+    import os
+
+    tmp = path.with_suffix(f".tmp{os.getpid()}")
     frame.to_parquet(tmp, index=False)
-    tmp.replace(path)
+    os.replace(tmp, path)
 
 
 def rename_method(root: Path, old: str, new: str) -> list[Path]:

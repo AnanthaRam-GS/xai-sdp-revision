@@ -32,7 +32,15 @@ def main(argv: list[str] | None = None) -> int:
     root = settings.root(cfg)
     info = json.loads((cfg.paths.results_dir / "explanations" / "run_info_full.json").read_text(encoding="utf-8"))
 
-    ex = E.load_explanations(root)
+    full = E.load_explanations(root)
+    ex = full.subset((full.meta["method"] != "LIME_mean_sampling").to_numpy())  # main tables: v2 methods only
+    archive = cfg.paths.reports_dir / "archive" / "step4_v1"
+    v1_info_path = cfg.paths.results_dir / "explanations" / "v1" / "run_info_full.json"
+    if archive.exists() and (full.meta["method"] == "LIME_mean_sampling").any():
+        checks, _ = E.check_summary(E.load_checks(root), settings.completeness_tolerance)
+        v1_info = json.loads(v1_info_path.read_text(encoding="utf-8")) if v1_info_path.exists() else {}
+        step4.CHANGES.update(step4.changes_since_v1(full, archive, checks,
+                                                    info, v1_info))  # fmt: skip
     imp = step4.importance_report(cfg, ex)
     step4.direction_report(cfg, ex, imp)
     step4.size_share_report(cfg, ex)

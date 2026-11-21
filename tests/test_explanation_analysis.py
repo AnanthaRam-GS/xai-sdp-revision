@@ -140,3 +140,18 @@ def test_bar_labels_come_from_index():
     y_rf = ticks[labels.index("RF-TreeSHAP")]
     bar = min(loc_bars, key=lambda b: abs(b.get_y() + b.get_height() / 2 - y_rf))
     assert bar.get_width() == pytest.approx(0.1)
+
+
+def test_step5_figure_labels_come_from_names():
+    s = pd.Series({"loc": 0.9, "wmc": 0.2, "cbo": 0.5})
+    fig, ax = F.single_bars(s, "t", "x")
+    labels = [t.get_text() for t in ax.get_yticklabels()]
+    bars = ax.patches
+    assert bars[labels.index("loc")].get_width() == pytest.approx(0.9)
+    table = pd.DataFrame({"MLP-DeepLiftShap": [0.5, 0.9], "RF-TreeSHAP": [0.4, 0.8]}, index=["10", "all"])
+    fig, ax = F.line_chart(table, "t", "x", "y")
+    assert [t.get_text() for t in ax.get_xticklabels()] == ["10", "all"]
+    line = next(l for l in ax.get_lines() if l.get_label() == "RF-TreeSHAP")
+    assert list(line.get_ydata()) == [0.4, 0.8]
+    fig, axes = F.box_panels({"MLP": {"main": np.array([0.1, 0.9]), "sampling=mean": np.array([0.5])}}, "t", "y")
+    assert [t.get_text() for t in axes[0].get_xticklabels()] == ["main", "sampling=mean"]

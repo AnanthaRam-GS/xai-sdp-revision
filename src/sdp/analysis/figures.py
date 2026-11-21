@@ -92,3 +92,94 @@ def size_share_bars(table: pd.DataFrame, title: str, path: Path | None = None):
     ax.set_title(title, loc="left", color=INK)
     _save(fig, path)
     return fig, ax
+
+
+def box_panels(data: dict[str, dict[str, np.ndarray]], title: str, ylabel: str, path: Path | None = None):
+    """One panel per key of ``data`` (e.g. a model); within a panel one box per inner key
+    (e.g. a LIME setting), labelled from the keys."""
+    panels = list(data)
+    fig, axes = plt.subplots(1, len(panels), figsize=(3.0 * len(panels) + 0.6, 3.6), sharey=True, squeeze=False)
+    for ax, panel in zip(axes[0], panels):
+        names = list(data[panel])
+        values = [np.asarray(data[panel][n], dtype=float) for n in names]
+        values = [v[np.isfinite(v)] for v in values]
+        bp = ax.boxplot(values, vert=True, patch_artist=True, widths=0.6, showfliers=False,
+                        medianprops={"color": INK, "linewidth": 1.0})  # fmt: skip
+        for patch in bp["boxes"]:
+            patch.set_facecolor(SERIES[0])
+            patch.set_alpha(0.75)
+            patch.set_edgecolor(SURFACE)
+        ax.set_xticks(range(1, len(names) + 1), labels=names, rotation=60, ha="right")
+        ax.set_title(panel, color=INK)
+        ax.grid(axis="y", color="#e4e3df", linewidth=0.6)
+        ax.set_axisbelow(True)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+    axes[0][0].set_ylabel(ylabel)
+    fig.suptitle(title, x=0.01, ha="left", color=INK, fontsize=9)
+    _save(fig, path)
+    return fig, axes[0]
+
+
+def line_chart(table: pd.DataFrame, title: str, xlabel: str, ylabel: str, path: Path | None = None,
+               ylim: tuple[float, float] | None = None):  # fmt: skip
+    """One line per column of ``table``; x positions are ``table.index`` (labels kept)."""
+    palette = SERIES + ["#1baf7a", "#eda100"]
+    fig, ax = plt.subplots(figsize=(5.2, 3.4))
+    x = np.arange(len(table.index))
+    for k, col in enumerate(table.columns):
+        ax.plot(x, table[col].to_numpy(dtype=float), marker="o", markersize=4, linewidth=1.6,
+                color=palette[k % len(palette)], label=str(col))  # fmt: skip
+    ax.set_xticks(x, labels=[str(i) for i in table.index])
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if ylim:
+        ax.set_ylim(*ylim)
+    ax.grid(axis="y", color="#e4e3df", linewidth=0.6)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    ax.legend(frameon=False, loc="lower right")
+    ax.set_title(title, loc="left", color=INK)
+    _save(fig, path)
+    return fig, ax
+
+
+def single_bars(values: pd.Series, title: str, xlabel: str, path: Path | None = None, xlim=None):
+    """Horizontal bars labelled from ``values.index`` (first item on top)."""
+    labels = [str(i) for i in values.index][::-1]
+    vals = [float(values.loc[i]) for i in values.index][::-1]
+    fig, ax = plt.subplots(figsize=(4.8, 0.26 * len(labels) + 1.0))
+    ax.barh(np.arange(len(labels)), vals, height=0.7, color=SERIES[0], edgecolor=SURFACE)
+    ax.set_yticks(np.arange(len(labels)), labels=labels)
+    ax.set_xlabel(xlabel)
+    if xlim:
+        ax.set_xlim(*xlim)
+    ax.grid(axis="x", color="#e4e3df", linewidth=0.6)
+    ax.set_axisbelow(True)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    ax.tick_params(axis="y", length=0)
+    ax.set_title(title, loc="left", color=INK)
+    _save(fig, path)
+    return fig, ax
+
+
+def dendrogram_plot(Z, labels: list[str], title: str, cut: float | None = None, path: Path | None = None):
+    """Dendrogram of a linkage matrix with leaves labelled from ``labels``; optional cut line."""
+    from scipy.cluster.hierarchy import dendrogram
+
+    from scipy.cluster.hierarchy import set_link_color_palette
+
+    fig, ax = plt.subplots(figsize=(6.4, 3.6))
+    set_link_color_palette(SERIES)
+    dendrogram(Z, labels=list(labels), ax=ax, color_threshold=cut if cut is not None else 0,
+               above_threshold_color="#898781", leaf_rotation=90, leaf_font_size=7)  # fmt: skip
+    set_link_color_palette(None)
+    if cut is not None:
+        ax.axhline(cut, color=SERIES[1], linewidth=1.0, linestyle="--")
+    ax.set_ylabel("1 − |Spearman ρ|")
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    ax.set_title(title, loc="left", color=INK)
+    _save(fig, path)
+    return fig, ax
