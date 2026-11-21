@@ -83,9 +83,12 @@ class ExplainContext:
     y_prob: np.ndarray = field(init=False)
 
     def __post_init__(self):
-        for frame in (self.X_train, self.X_test, self.X_test_raw, self.background):
-            if list(frame.columns) != list(FEATURES):
-                raise ValueError("explainer inputs must have the 20 metrics in canonical order")
+        cols = list(self.X_test.columns)
+        if not cols or cols != [f for f in FEATURES if f in cols]:
+            raise ValueError("explainer inputs must hold metrics in canonical order")
+        for frame in (self.X_train, self.X_test_raw, self.background):
+            if list(frame.columns) != cols:
+                raise ValueError("all explainer inputs must have the same metrics")
         self.y_prob = self.predict(self.X_test.to_numpy())
 
     @property
@@ -100,7 +103,7 @@ class ExplainContext:
         """P(defective) for rows in model input space (array or DataFrame)."""
         from sdp.models.registry import positive_proba
 
-        X = pd.DataFrame(np.asarray(X, dtype="float64"), columns=FEATURES)
+        X = pd.DataFrame(np.asarray(X, dtype="float64"), columns=self.feature_names)
         return positive_proba(self.model, X)
 
     def predict_proba(self, X) -> np.ndarray:
@@ -125,9 +128,10 @@ class MethodResult:
     def __post_init__(self):
         if self.output_scale not in OUTPUT_SCALES:
             raise ValueError(f"unknown output scale {self.output_scale!r}")
-        if set(self.attributions.columns) != set(FEATURES):
-            raise ValueError(f"{self.method}: attributions must be labelled with the 20 metric names")
-        self.attributions = self.attributions[FEATURES]  # canonical order, matched by name
+        cols = set(self.attributions.columns)
+        if not cols or not cols <= set(FEATURES) or len(cols) != self.attributions.shape[1]:
+            raise ValueError(f"{self.method}: attributions must be labelled with metric names")
+        self.attributions = self.attributions[[f for f in FEATURES if f in cols]]  # canonical order, by name
 
 
 class Explainer(ABC):
@@ -166,6 +170,17 @@ def check_frame(ctx: ExplainContext, method: str, check: str, output, reference,
     })[CHECK_COLUMNS]  # fmt: skip
 
 
+def subset_context(ctx: ExplainContext, idx) -> ExplainContext:
+    """The same context restricted to the test instances at positions ``idx``."""
+    import dataclasses
+
+    idx = np.asarray(idx, dtype=int)
+    return dataclasses.replace(
+        ctx, X_test=ctx.X_test.iloc[idx].reset_index(drop=True), X_test_raw=ctx.X_test_raw.iloc[idx].reset_index(drop=True),
+        class_name=np.asarray(ctx.class_name)[idx], y_true=np.asarray(ctx.y_true)[idx], loc=np.asarray(ctx.loc)[idx],
+    )  # fmt: skip
+
+
 # ---------------------------------------------------------------- background set
 
 
@@ -186,9 +201,13 @@ def sample_background(X: pd.DataFrame, y, size: int, seed: int) -> pd.DataFrame:
 
 
 def save_background(frame: pd.DataFrame, path: Path) -> None:
+    import os
+
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    frame.rename_axis("row").reset_index().to_parquet(path, index=False)
+    tmp = path.with_suffix(f".tmp{os.getpid()}")  # atomic: workers of other models may read it concurrently
+    frame.rename_axis("row").reset_index().to_parquet(tmp, index=False)
+    os.replace(tmp, path)
 
 
 def load_background(path: Path) -> pd.DataFrame:
@@ -223,9 +242,32 @@ def partition_path(root: Path, model: str, method: str, split_dir: str, seed: in
 def write_long(frame: pd.DataFrame, path: Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
+    import os
+
+    tmp = path.with_suffix(f".tmp{os.getpid()}")
     frame.to_parquet(tmp, index=False)
-    tmp.replace(path)
+    os.replace(tmp, path)
+
+
+def rename_method(root: Path, old: str, new: str) -> list[Path]:
+    """Move every ``<model>/<old>/`` partition of the store to ``<model>/<new>/`` and
+    rewrite its ``method`` column, so earlier results are kept under a new name."""
+    moved = []
+    for src_dir in sorted(Path(root).glob(f"*/{old}")):
+        if src_dir.parent.name.startswith("_"):
+            continue
+        dst_dir = src_dir.parent / new
+        if dst_dir.exists():
+            raise FileExistsError(f"{dst_dir} exists already; refusing to overwrite")
+        dst_dir.mkdir(parents=True)
+        for f in sorted(src_dir.glob("*.parquet")):
+            frame = pd.read_parquet(f)
+            frame["method"] = new
+            write_long(frame, dst_dir / f.name)
+            f.unlink()
+            moved.append(dst_dir / f.name)
+        src_dir.rmdir()
+    return moved
 
 
 def read_attributions(root: Path, models=None, methods=None, columns=None, seeds=None) -> pd.DataFrame:

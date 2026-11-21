@@ -1,5 +1,12 @@
 # Step 4 runtime
 
+## Changes since v1
+
+v1 is archived in `reports/archive/step4_v1/`. v2 changes two settings: Integrated Gradients now uses 512 Gauss-Legendre steps (v1: 64), and LIME samples its perturbations around the explained instance (`sample_around_instance=True`; v1 sampled around the training mean). The v1 LIME results are kept in the store as `LIME_mean_sampling`. Everything else is unchanged.
+
+v1 full run: 14.4 min wall. v2 run: 19.4 min wall, 504 of 960 jobs reused from the cache.
+
+
 ## Machine
 
 | item | value |
@@ -49,21 +56,23 @@ Estimated full run: 1.36 CPU h, ~0.40 h wall with n_jobs=10. The estimate is bel
 
 ## Full run
 
-960 jobs ((split, model, seed) units), n_jobs=10, 4 reused from the smoke test. Wall time 14.4 min; CPU time 2.36 h in the explainers.
+v2 recomputed every job whose methods or settings changed (all MLP jobs for Integrated Gradients, all seed 0–2 jobs for LIME); jobs of LR, RF and XGBoost with seeds 3–9 were unchanged and reused from the cache, so their timings are those of the v1 run.
+
+960 jobs ((split, model, seed) units), n_jobs=10, 504 reused from the cache. Wall time 19.4 min; CPU time 3.70 h in the explainers.
 
 | explanation | units | instances | cpu_h | ms_per_instance |
 |---|---|---|---|---|
-| MLP-DeepLift | 240 | 94110 | 0.001 | 0.03 |
-| MLP-DeepLiftShap | 240 | 94110 | 0.137 | 5.26 |
-| MLP-GradientShap | 240 | 94110 | 0.024 | 0.94 |
-| MLP-IntegratedGradients | 240 | 94110 | 0.023 | 0.88 |
+| MLP-DeepLift | 240 | 94110 | 0.001 | 0.04 |
+| MLP-DeepLiftShap | 240 | 94110 | 0.173 | 6.63 |
+| MLP-GradientShap | 240 | 94110 | 0.031 | 1.18 |
+| MLP-IntegratedGradients | 240 | 94110 | 1.316 | 50.33 |
 | MLP-Saliency | 240 | 94110 | 0.000 | 0.01 |
 | MLP-InputXGradient | 240 | 94110 | 0.000 | 0.01 |
-| MLP-LIME | 72 | 28233 | 0.088 | 11.17 |
-| MLP-KernelSHAP | 72 | 28233 | 0.455 | 58.08 |
-| LR-LIME | 72 | 28233 | 0.068 | 8.73 |
-| LR-LinearSHAP | 240 | 94110 | 0.000 | 0.01 |
-| RF-LIME | 72 | 28233 | 0.638 | 81.34 |
-| RF-TreeSHAP | 240 | 94110 | 0.713 | 27.26 |
-| XGB-LIME | 72 | 28233 | 0.131 | 16.73 |
-| XGB-TreeSHAP | 240 | 94110 | 0.078 | 2.98 |
+| MLP-LIME | 72 | 28233 | 0.116 | 14.80 |
+| MLP-KernelSHAP | 72 | 28233 | 0.569 | 72.60 |
+| LR-LIME | 72 | 28233 | 0.060 | 7.68 |
+| LR-LinearSHAP | 240 | 94110 | 0.000 | 0.00 |
+| RF-LIME | 72 | 28233 | 0.534 | 68.08 |
+| RF-TreeSHAP | 240 | 94110 | 0.703 | 26.90 |
+| XGB-LIME | 72 | 28233 | 0.118 | 15.02 |
+| XGB-TreeSHAP | 240 | 94110 | 0.076 | 2.91 |

@@ -101,3 +101,47 @@ def test_float32_safe_forest_keeps_predictions_and_rounds_down():
         assert np.all(t_new <= t_old)
         np.testing.assert_array_equal(t_new, t_new.astype(np.float32).astype(np.float64))
     assert not np.shares_memory(safe.estimators_[0].tree_.threshold, ctx.model.estimators_[0].tree_.threshold)
+
+
+class Quadratic:
+    """Non-linear toy model: P(defective) rises with cbo**2 (U-shaped in cbo)."""
+
+    classes_ = np.array([0, 1])
+
+    def predict_proba(self, X):
+        z = np.asarray(X, dtype=float)[:, 3]
+        p = 1 / (1 + np.exp(-(z**2 - 1.0)))
+        return np.column_stack([1 - p, p])
+
+
+def test_lime_instance_sampling_gives_instance_dependent_weights():
+    ctx = only_feature3_context(n_test=2)
+    ctx.model = Quadratic()
+    far = ctx.X_test.copy()
+    far.loc[0, "cbo"], far.loc[1, "cbo"] = -2.5, 2.5
+    import dataclasses
+
+    ctx = dataclasses.replace(ctx, X_test=far, X_test_raw=far)
+    local = om.LimeExplainer(num_samples=2000).explain(ctx).attributions["cbo"].to_numpy()
+    assert local[0] < 0 < local[1]  # opposite slopes on the two arms of the U
+    mean = om.LimeMeanSamplingExplainer(num_samples=2000).explain(ctx).attributions["cbo"].to_numpy()
+    assert abs(mean[0] - mean[1]) < abs(local[1] - local[0])  # v1 setting: much less instance-dependent
+
+
+def test_rename_method_keeps_old_results(tmp_path):
+    from sdp.explain import base
+
+    ctx = make_context("lr", n_test=3)
+    res = om.LimeExplainer(num_samples=200).explain(ctx)
+    base.write_long(base.to_long(ctx, res), base.partition_path(tmp_path, "lr", "LIME", "s", 0))
+    moved = base.rename_method(tmp_path, "LIME", "LIME_mean_sampling")
+    assert len(moved) == 1 and not (tmp_path / "lr" / "LIME").exists()
+    back = base.read_attributions(tmp_path)
+    assert set(back["method"]) == {"LIME_mean_sampling"} and len(back) == 3 * 20
+
+
+def test_lime_records_surrogate_r2():
+    ctx = make_context("lr", n_test=4)
+    exp = om.LimeExplainer(num_samples=300)
+    exp.explain(ctx)
+    assert exp.scores_.shape == (4,) and np.all(exp.scores_ <= 1.0)

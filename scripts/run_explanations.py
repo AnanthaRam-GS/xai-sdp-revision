@@ -20,6 +20,7 @@ import logging
 import sys
 
 from sdp.config import DEFAULT_CONFIG, REPO_ROOT, load_config
+from sdp.explain.base import rename_method
 from sdp.explain.runner import (
     MissingArtifactError,
     build_jobs,
@@ -45,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--smoke-split", default=None, help="split id for the smoke test (default: median size)")
     parser.add_argument("--estimate-only", action="store_true", help="stop after the estimate")
     parser.add_argument("--reduced", action="store_true", help="use the reduced LIME/KernelSHAP sample sizes")
+    parser.add_argument("--keep-method-as", nargs=2, metavar=("OLD", "NEW"), default=None,
+                        help="before running, keep the stored results of method OLD under the name NEW")  # fmt: skip
     args = parser.parse_args(argv)
 
     setup_logging()
@@ -54,6 +57,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.reduced:
         settings = settings.with_reduction()
     n_jobs = args.n_jobs or settings.n_jobs
+    if args.keep_method_as:
+        moved = rename_method(settings.root(cfg), *args.keep_method_as)
+        logger.info("Kept %d stored %s file(s) as %s.", len(moved), *args.keep_method_as)
     splits, frames = experiment_splits(cfg, settings)
     jobs = build_jobs(cfg, settings, frames, splits)
     missing = missing_artifacts(jobs)

@@ -1,0 +1,13 @@
+name: autospearman_time_aware
+description: Step 5 retraining on the AutoSpearman-selected metrics of each training release (time-aware).
+protocol: time_aware
+time_aware_variant: consecutive
+default_imbalance: class_weight
+models:
+  mlp: {preprocessing: [log_standard]}
+  rf: {preprocessing: [standard]}
+seeds: [0, 1, 2]
+n_trials: 25
+feature_selection: {method: autospearman, threshold: 0.7, vif_threshold: 5}
+persist_models: true
+n_jobs: 10

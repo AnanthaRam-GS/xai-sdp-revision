@@ -33,6 +33,12 @@ def test_completeness_on_tiny_model(ctx, name):
     assert chk["error"].quantile(0.95) < tol
 
 
+def test_integrated_gradients_default_is_512_steps_and_converges(ctx):
+    e512 = cm.IntegratedGradientsExplainer().explain(ctx).checks["error"]
+    e16 = cm.IntegratedGradientsExplainer(n_steps=16).explain(ctx).checks["error"]
+    assert e512.quantile(0.95) <= 1e-3 and e512.max() <= e16.max()
+
+
 def test_deeplift_reference_is_background_mean(ctx):
     res = cm.DeepLiftExplainer().explain(ctx)
     module = cm.probability_module(ctx)
@@ -48,3 +54,14 @@ def test_saliency_is_signed_gradient(ctx):
     ixg = cm.InputXGradientExplainer().explain(ctx).attributions.to_numpy()
     assert (sal < 0).any()  # raw gradient, not |gradient|
     np.testing.assert_allclose(ixg, sal * ctx.X_test.to_numpy(), atol=1e-12)
+
+
+def test_zero_baseline_deeplift(ctx):
+    res = cm.DeepLiftZeroBaselineExplainer().explain(ctx)
+    module = cm.probability_module(ctx)
+    f0 = float(module(torch.zeros((1, len(FEATURES)), dtype=torch.float64)))
+    np.testing.assert_allclose(res.checks["reference"], f0)
+    assert res.checks["error"].max() < 1e-10  # completeness w.r.t. f(0)
+    np.testing.assert_allclose(res.attributions.sum(axis=1), ctx.y_prob - f0, atol=1e-6)
+    mean_bl = cm.DeepLiftExplainer().explain(ctx).attributions
+    assert not np.allclose(res.attributions, mean_bl)

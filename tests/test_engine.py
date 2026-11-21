@@ -173,3 +173,20 @@ def test_no_leakage_in_tuning_and_fitting(env, monkeypatch):
             assert idx == val
     # The test release is only ever used for prediction, after fitting.
     assert any(kind == "predict" and idx == test for kind, idx in final_log)
+
+
+def test_autospearman_feature_selection_jobs(env):
+    cfg, frame, study = env
+    frame["rfc"] = frame["wmc"] * 2 + 1  # perfectly rank-correlated with wmc: one of them must go
+    exp = ExperimentConfig("fs", "time_aware", (ModelSetting("rf", "standard", "class_weight"),), (0,),
+                           n_trials=1, persist_models=True,
+                           feature_selection={"method": "autospearman", "threshold": 0.7, "vif_threshold": 5})  # fmt: skip
+    jobs = engine.build_jobs(cfg, exp, study, {"x": frame})
+    feats = jobs[0].features
+    assert feats is not None and len({"wmc", "rfc"} & set(feats)) == 1
+    plain = dataclasses.replace(jobs[0], features=None)
+    assert plain.cache_key(cfg) != jobs[0].cache_key(cfg)
+    res = engine.execute_job(jobs[0], frame, cfg)
+    pre, model, meta = load_artifact(list(res["artifacts"].values())[0])
+    assert meta["feature_order"] == list(feats) and model.n_features_in_ == len(feats)
+    assert len(res["predictions"]) == len(jobs[0].splits[0].test_idx)

@@ -175,8 +175,8 @@ Explains every test instance of the 24 `main_time_aware` splits with the persist
 
 | Model | Methods | Seeds |
 |---|---|---|
-| MLP | DeepLift, DeepLiftShap, GradientShap (50 samples, stdevs 0), IntegratedGradients (64 Gauss-Legendre steps), Saliency (signed gradient), InputXGradient (`captum_methods.py`) | 0–9 |
-| MLP | LIME (5000 samples, 20 features, no discretisation), KernelSHAP (1000 samples, no lasso selection) | 0–2 |
+| MLP | DeepLift, DeepLiftShap, GradientShap (50 samples, stdevs 0), IntegratedGradients (512 Gauss-Legendre steps; 64 in v1), Saliency (signed gradient), InputXGradient (`captum_methods.py`) | 0–9 |
+| MLP | LIME (5000 samples, 20 features, no discretisation, sampling around the instance), KernelSHAP (1000 samples, no lasso selection) | 0–2 |
 | RF, XGBoost | interventional TreeSHAP on the probability, background set as data | 0–9 |
 | LR | LinearSHAP (log-odds) | 0–9 |
 | LR, RF, XGBoost | LIME | 0–2 |
@@ -202,6 +202,30 @@ Absolute attributions are L1-normalised per instance, averaged within a split (s
 - `step4_sanity_checks.md`, `step4_runtime.md`;
 - draft figures (300 dpi) in `reports/figures/step4/`.
 
+## Step 5: robustness and sensitivity of the explanations
+
+**Fixes to step 4 (v2).** Integrated Gradients now uses 512 Gauss-Legendre steps (95th percentile completeness error 3.5e-4; 2.8e-3 with 64 steps), and LIME samples its perturbations around the explained instance (`sample_around_instance=True`). The v1 LIME results are kept in the store as `LIME_mean_sampling` (`python -m scripts.run_explanations --keep-method-as LIME LIME_mean_sampling`). The v1 step 4 reports are archived in `reports/archive/step4_v1/`, and each regenerated step 4 report opens with a "Changes since v1" section.
+
+Studies (`src/sdp/robustness/`, settings in `configs/robustness.yaml`); each reuses the step 4 explainers, background sets, store and analysis functions:
+
+| Study | Module | Scope |
+|---|---|---|
+| LIME stability and settings | `lime_study.py` | seed-0 models; up to 10 instances per outcome group per split; 10 runs (random_state 0–9); one-factor grid over `num_samples`, kernel width and sampling scheme; surrogate R² |
+| Background sensitivity | `background_study.py` | seed-0 MLP (DeepLiftShap, GradientShap), RF and XGBoost (TreeSHAP); all test instances; sizes 10–all, random / k-means (weighted) / one-class schemes, 5 repeated draws as the noise floor |
+| Preprocessing | `preprocessing_study.py` | `ablation_preprocessing` MLP and LR models × none / standard / log_standard × 10 seeds; DeepLiftShap, DeepLift (and an all-zero baseline DeepLift for unscaled inputs), LinearSHAP; Wilcoxon + Holm + Cliff's delta on loc and size-group shares |
+| Multicollinearity | `collinearity.py` | Spearman clustering (cut at \|ρ\| = 0.7) and VIF per training release; stable clusters; AutoSpearman; grouped (cluster-level) attributions; MLP and RF retrained on the AutoSpearman metrics (`configs/experiments/autospearman_time_aware.yaml`, step 3 engine with per-split feature selection) |
+
+```bash
+# step 4 v2 (keeps the v1 LIME results), then step 5
+python -m scripts.run_explanations --keep-method-as LIME LIME_mean_sampling
+python -m scripts.make_step4_reports
+python -m scripts.run_robustness --smoke --estimate-only   # smoke test and runtime estimate
+python -m scripts.run_robustness                           # all studies (or --studies lime background ...)
+python -m scripts.make_step5_reports
+```
+
+Outputs: attributions and LIME runs under `artifacts/robustness/`, `artifacts/attributions_ablation_preprocessing/<preprocessing>/` and `artifacts/attributions_autospearman_time_aware/`; retrained models under `artifacts/models/autospearman_time_aware/`; reports `reports/step5_lime_stability.md`, `step5_background_sensitivity.md`, `step5_preprocessing_explanations.md`, `step5_collinearity.md` and `step5_runtime.md` (with CSVs) and figures in `reports/figures/step5/`. Per-instance values are in `results/robustness/`.
+
 ## Layout
 
 ```
@@ -218,7 +242,8 @@ src/sdp/models/            MLP, LR/RF/XGBoost, baselines, imbalance handling
 src/sdp/tuning.py          Optuna tuning
 src/sdp/experiments/       step 2 runner, step 3 engine, configs, persistence
 src/sdp/explain/           explainers, background sets, attribution store, runner (step 4)
-src/sdp/analysis/          step 3 and step 4 aggregation, reports and figures
+src/sdp/robustness/        step 5 studies (LIME, background, preprocessing, collinearity)
+src/sdp/analysis/          step 3–5 aggregation, reports and figures
 configs/experiments/       experiment definitions
 scripts/prepare_data.py    data preparation entry point
 scripts/run_baselines.py   baseline experiments entry point (step 2)
@@ -227,6 +252,9 @@ scripts/make_step3_reports.py  step 3 reports
 scripts/run_explanations.py    step 4 explanations (smoke test, estimate, full run)
 scripts/make_step4_reports.py  step 4 reports and figures
 configs/explain.yaml       step 4 explanation settings
+configs/robustness.yaml    step 5 study settings
+scripts/run_robustness.py      step 5 studies (smoke test, estimate, full run)
+scripts/make_step5_reports.py  step 5 reports and figures
 tests/                     pytest suite
 ```
 
@@ -234,6 +262,7 @@ tests/                     pytest suite
 
 - Jureczko, M., & Madeyski, L. (2010). Towards identifying software project clusters with regard to defect prediction. *PROMISE '10*.
 - Herbold, S. (2018). Benchmarking cross-project defect prediction approaches with costs metrics. arXiv:1801.04107.
+- Jiarpakdee, J., Tantithamthavorn, C., & Treude, C. (2018). AutoSpearman: Automatically mitigating correlated software metrics for interpreting defect models. *ICSME 2018*, 92–103.
 - Krishna, S., Han, T., Gu, A., Pombra, J., Jabbari, S., Wu, S., & Lakkaraju, H. (2022). The disagreement problem in explainable machine learning: A practitioner's perspective. arXiv:2202.01602.
 - Mende, T., & Koschke, R. (2010). Effort-aware defect prediction models. *CSMR 2010*, 107–116.
 - Romano, J., Kromrey, J. D., Coraggio, J., & Skowronek, J. (2006). Appropriate statistics for ordinal level data. *Florida Association of Institutional Research*.

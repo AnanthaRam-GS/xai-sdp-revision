@@ -9,7 +9,8 @@ about 1e-7.
 * DeepLift: baseline = background mean.
 * DeepLiftShap: baselines = the background set (attributions averaged over it).
 * GradientShap: baselines = the background set, ``n_samples=50``, ``stdevs=0.0``.
-* IntegratedGradients: baseline = background mean, ``n_steps=64``, Gauss-Legendre.
+* IntegratedGradients: baseline = background mean, ``n_steps=512`` (64 in step 4 v1, whose
+  completeness errors exceeded 1e-3), Gauss-Legendre.
 * Saliency: the raw (signed) gradient (``abs=False``); |gradient| is derived later.
 * InputXGradient: input × gradient.
 
@@ -105,6 +106,20 @@ class DeepLiftExplainer(CaptumExplainer):
         return method.attribute(x, baselines=bg.mean(dim=0, keepdim=True), target=0)
 
 
+class DeepLiftZeroBaselineExplainer(DeepLiftExplainer):
+    """DeepLift with an all-zero baseline in the model's input space. With unscaled
+    inputs (preprocessing ``none``) this is the original paper's setting: every metric
+    is compared with the value 0. Completeness is checked against f(0)."""
+
+    name = "DeepLift_zero_baseline"
+
+    def _call(self, method, x, ctx, bg):
+        return method.attribute(x, baselines=torch.zeros_like(x[:1]), target=0)
+
+    def _reference(self, module, bg):
+        return float(_forward(module, torch.zeros_like(bg[:1]))[0])
+
+
 class DeepLiftShapExplainer(CaptumExplainer):
     name = "DeepLiftShap"
     completeness = True
@@ -142,7 +157,7 @@ class IntegratedGradientsExplainer(CaptumExplainer):
 
     def _call(self, method, x, ctx, bg):
         return method.attribute(x, baselines=bg.mean(dim=0, keepdim=True), target=0,
-                                n_steps=int(self.params.get("n_steps", 64)),
+                                n_steps=int(self.params.get("n_steps", 512)),
                                 method=str(self.params.get("method", "gausslegendre")))  # fmt: skip
 
 
@@ -167,6 +182,7 @@ CAPTUM_EXPLAINERS = {
     cls.name: cls
     for cls in (
         DeepLiftExplainer,
+        DeepLiftZeroBaselineExplainer,
         DeepLiftShapExplainer,
         GradientShapExplainer,
         IntegratedGradientsExplainer,

@@ -1,0 +1,21 @@
+metric,kept in % of training releases
+avg_cc,100
+noc,100
+moa,100
+lcom3,96
+ca,92
+lcom,88
+amc,88
+ce,79
+cam,75
+npm,75
+mfa,54
+ic,54
+dit,46
+dam,42
+cbo,33
+cbm,29
+max_cc,0
+wmc,0
+rfc,0
+loc,0

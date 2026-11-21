@@ -17,6 +17,10 @@ from sdp.data.audit import to_markdown
 
 logger = logging.getLogger(__name__)
 
+# "Changes since v1" sections, keyed by report name; set by scripts.make_step4_reports
+# before the reports are written and inserted under each report's title.
+CHANGES: dict[str, list[str]] = {}
+
 FIG_DIR = Path("figures") / "step4"
 SCALE_NOTE = (
     "**Output scale.** Every explanation explains P(defective) except LR-LinearSHAP, which is exact "
@@ -25,15 +29,14 @@ SCALE_NOTE = (
     "aggregation, and the comparisons are rank-based, the scale difference does not affect them."
 )
 LIME_NOTE = (
-    "**LIME weights are slopes.** With `discretize_continuous=False` (and LIME's default "
-    "`sample_around_instance=False`), LIME fits a weighted linear surrogate to samples drawn around "
-    "the training mean, and its weights are that surrogate's coefficients (per standardised unit). "
-    "They are slopes, like Saliency's gradients, not contributions relative to a reference "
-    "(slope × (x − reference)) as for the SHAP family, DeepLift, Integrated Gradients and "
-    "InputXGradient. They also vary little between instances: the median coefficient of variation "
-    "across the test instances of a split is about 0.1–0.2 for LIME and above 1 for TreeSHAP, "
-    "DeepLiftShap and Saliency (checked on ant 1.5→1.6, seed 0). LIME's sign therefore reflects the "
-    "slope, not whether the instance's value raises its prediction."
+    "**LIME weights are slopes.** LIME (`discretize_continuous=False`, `sample_around_instance=True`) "
+    "fits a weighted linear surrogate to perturbations drawn around the explained instance; its weights "
+    "are that surrogate's coefficients (per standardised unit), i.e. local slopes like Saliency's "
+    "gradients, not contributions relative to a reference (slope × (x − reference)) as for the SHAP "
+    "family, DeepLift, Integrated Gradients and InputXGradient. LIME's sign therefore says whether the "
+    "prediction rises with the feature near the instance, not whether the instance's value raises its "
+    "prediction. The step 4 v1 setting (`sample_around_instance=False`, kept as `LIME_mean_sampling`) "
+    "sampled around the training mean and gave almost the same weights for every instance."
 )
 AGG_NOTE = (
     "Absolute attributions are normalised per instance to unit L1 norm, averaged over the test "
@@ -49,6 +52,8 @@ def _f(x, digits: int = 3) -> str:
 def _write(cfg: Config, name: str, md: list[str], csvs: dict[str, pd.DataFrame]) -> None:
     out = reports_dir(cfg)
     out.mkdir(parents=True, exist_ok=True)
+    if CHANGES.get(name):
+        md = md[:2] + CHANGES[name] + [""] + md[2:]
     (out / f"{name}.md").write_text("\n".join(md).rstrip() + "\n", encoding="utf-8")
     for suffix, df in csvs.items():
         df.to_csv(out / f"{name}{suffix}.csv", index=False)
@@ -464,11 +469,10 @@ def sanity_report(cfg: Config, root: Path, tolerance: float, run_info: dict) -> 
         "",
         "## Notes",
         "",
-        "* IntegratedGradients approximates a path integral with 64 Gauss-Legendre nodes; the MLP's "
-        "ReLU kinks and the sigmoid make the integrand non-smooth, so a residual error is expected. It shrinks "
-        "roughly as 1/steps: on the worst split (camel 1.2→1.4, seed 0) the 95th percentile is 1.35e-02, "
-        "3.30e-03, 8.47e-04 and 2.22e-04 with 16, 64, 256 and 1024 steps. The configured 64 steps were "
-        "kept; the error is reported, not corrected.",
+        "* IntegratedGradients approximates a path integral with Gauss-Legendre nodes; the MLP's ReLU "
+        "kinks and the sigmoid make the integrand non-smooth, so a residual error remains. It shrinks "
+        "roughly as 1/steps: on the worst v1 split (camel 1.2→1.4, seed 0) the 95th percentile is 1.35e-02, "
+        "3.30e-03, 8.47e-04 and 2.22e-04 with 16, 64, 256 and 1024 steps. v1 used 64 steps; v2 uses 512.",
         "* TreeSHAP for the random forests: shap's interventional algorithm stores split thresholds as "
         "float32 while scikit-learn compares float32 inputs with float64 thresholds; where rounding a "
         "threshold crosses a data value shap took the wrong branch (additivity errors up to 0.02 in the "
@@ -529,8 +533,12 @@ def runtime_report(cfg: Config) -> pd.DataFrame:
         "",
         "## Full run",
         "",
+        "v2 recomputed every job whose methods or settings changed (all MLP jobs for Integrated "
+        "Gradients, all seed 0–2 jobs for LIME); jobs of LR, RF and XGBoost with seeds 3–9 were unchanged "
+        "and reused from the cache, so their timings are those of the v1 run.",
+        "",
         f"{info.get('jobs')} jobs ((split, model, seed) units), n_jobs={info.get('n_jobs')}, "
-        f"{info.get('jobs_from_cache')} reused from the smoke test. Wall time {info.get('wall_time_s', 0) / 60:.1f} min; "
+        f"{info.get('jobs_from_cache')} reused from the cache. Wall time {info.get('wall_time_s', 0) / 60:.1f} min; "
         f"CPU time {full['time_s'].sum() / 3600:.2f} h in the explainers.",
         "",
         to_markdown(per[["explanation", "units", "instances", "cpu_h", "ms_per_instance"]]
@@ -548,3 +556,115 @@ def _v(lib: str) -> str:
         return metadata.version(lib)
     except metadata.PackageNotFoundError:
         return "n/a"
+
+
+# ------------------------------------------------------------------ changes since v1
+
+
+def _old_new(t: pd.DataFrame, key: str, old: str, new: str, value: str) -> pd.DataFrame:
+    w = t.pivot_table(index=key, columns="method", values=value)
+    return w[[old, new]] if old in w.columns and new in w.columns else w
+
+
+def changes_since_v1(ex: E.Explanations, archive: Path, checks_summary: pd.DataFrame, run_info: dict,
+                     v1_info: dict) -> dict[str, list[str]]:  # fmt: skip
+    """Short "Changes since v1" sections comparing v2 (IG with 512 steps, LIME with
+    instance sampling) with v1 (archived in ``archive``)."""
+    old, new = "LIME_mean_sampling", "LIME"
+    lime = ex.subset(ex.meta["method"].isin([old, new]).to_numpy() & ex.meta["seed"].isin([0, 1, 2]).to_numpy())
+    head = ["## Changes since v1", "",
+            f"v1 is archived in `reports/archive/{archive.name}/`. v2 changes two settings: Integrated Gradients now uses "
+            "512 Gauss-Legendre steps (v1: 64), and LIME samples its perturbations around the explained "
+            "instance (`sample_around_instance=True`; v1 sampled around the training mean). The v1 LIME "
+            "results are kept in the store as `LIME_mean_sampling`. Everything else is unchanged.", ""]  # fmt: skip
+    # instance CV
+    cv = E.instance_cv(lime)
+    cv_t = cv.pivot(index="model", columns="method", values="median_cv").reindex(E.MODEL_ORDER)[[old, new]]
+    cv_md = pd.DataFrame({"model": [E.MODEL_LABEL[m] for m in cv_t.index], "v1 (mean sampling)": cv_t[old].map(_f),
+                          "v2 (instance sampling)": cv_t[new].map(_f)})  # fmt: skip
+    # size share
+    ss = E.size_share(lime)
+    ss = ss[ss["scope"] == "ALL"]
+    rows = []
+    for m in E.MODEL_ORDER:
+        a = ss[(ss["model"] == m) & (ss["method"] == old)].iloc[0]
+        b = ss[(ss["model"] == m) & (ss["method"] == new)].iloc[0]
+        rows.append({"model": E.MODEL_LABEL[m], "loc share v1 → v2": f"{a.loc_share:.3f} → {b.loc_share:.3f}",
+                     "size-group share v1 → v2": f"{a.size_group_share:.3f} → {b.size_group_share:.3f}",
+                     "% loc top-1 v1 → v2": f"{a.loc_top1_pct:.1f} → {b.loc_top1_pct:.1f}"})  # fmt: skip
+    ss_md = pd.DataFrame(rows)
+    # top-5
+    imp = E.global_importance(lime, groups=("all",))
+    imp = imp[imp["scope"] == "ALL"]
+    top = []
+    for m in E.MODEL_ORDER:
+        row = {"model": E.MODEL_LABEL[m]}
+        for meth, lab in ((old, "v1 top-5"), (new, "v2 top-5")):
+            s_ = imp[(imp["model"] == m) & (imp["method"] == meth)].sort_values("importance", ascending=False)
+            row[lab] = ", ".join(s_.head(5)["feature"])
+        top.append(row)
+    # direction
+    d = E.direction(lime)
+    d = d[d["scope"] == "ALL"]
+    drow = []
+    for m in E.MODEL_ORDER:
+        r = {"model": E.MODEL_LABEL[m]}
+        for meth, lab in ((old, "v1"), (new, "v2")):
+            g = d[(d["model"] == m) & (d["method"] == meth)]
+            r[f"{lab} +/−/0"] = f"{(g['direction'] == '+').sum()}/{(g['direction'] == '−').sum()}/{(g['direction'] == '0').sum()}"
+            r[f"{lab} mean |ρ|"] = f"{g['spearman'].abs().mean():.2f}"
+        drow.append(r)
+    # agreement (means over instances, no bootstrap)
+    ref = {"mlp": ["DeepLiftShap", "KernelSHAP", "Saliency"], "lr": ["LinearSHAP"], "rf": ["TreeSHAP"], "xgb": ["TreeSHAP"]}
+    sub = ex.subset(ex.meta["seed"].isin([0, 1, 2]).to_numpy())
+    arow = []
+    for m, others in ref.items():
+        for o in others:
+            r = {"pair": f"{E.MODEL_LABEL[m]}-LIME vs {E.label(m, o)}"}
+            for meth, lab in ((old, "v1"), (new, "v2")):
+                pa = E.pair_agreement(sub, (m, meth), (m, o))
+                r[f"FA@5 {lab}"] = f"{pa['feature_agreement@5'].mean():.3f}"
+                r[f"SA@5 {lab}"] = f"{pa['sign_agreement@5'].mean():.3f}"
+                r[f"Spearman {lab}"] = f"{pa['spearman'].mean():.3f}"
+            arow.append(r)
+    for a, b in (("mlp", "rf"), ("rf", "xgb"), ("lr", "xgb")):
+        r = {"pair": f"{E.MODEL_LABEL[a]}-LIME vs {E.MODEL_LABEL[b]}-LIME"}
+        for meth, lab in ((old, "v1"), (new, "v2")):
+            pa = E.pair_agreement(sub, (a, meth), (b, meth))
+            r[f"FA@5 {lab}"] = f"{pa['feature_agreement@5'].mean():.3f}"
+            r[f"SA@5 {lab}"] = f"{pa['sign_agreement@5'].mean():.3f}"
+            r[f"Spearman {lab}"] = f"{pa['spearman'].mean():.3f}"
+        arow.append(r)
+    # completeness
+    v1_checks = pd.read_csv(archive / "step4_sanity_checks.csv")
+    ig1 = v1_checks[v1_checks["method"] == "IntegratedGradients"].iloc[0]
+    ig2 = checks_summary[checks_summary["method"] == "IntegratedGradients"].iloc[0]
+    ig_md = pd.DataFrame({"version": ["v1 (64 steps)", "v2 (512 steps)"],
+                          "median": [f"{ig1['median']:.2e}", f"{ig2['median']:.2e}"],
+                          "95th pct": [f"{ig1['p95']:.2e}", f"{ig2['p95']:.2e}"],
+                          "max": [f"{ig1['max']:.2e}", f"{ig2['max']:.2e}"],
+                          "status": ["fail" if ig1["p95"] > 1e-3 else "pass", "fail" if ig2["p95"] > 1e-3 else "pass"]})  # fmt: skip
+    cv_lines = ["LIME coefficient of variation across instances (median over splits of the median over "
+                "features of std/mean|w| across the test instances of a split, seed 0):", "", to_markdown(cv_md), ""]
+    out = {
+        "step4_global_importance": head + ["LIME top-5 features (ALL), v1 vs v2:", "", to_markdown(pd.DataFrame(top)), ""] + cv_lines
+        + ["Integrated Gradients rankings are essentially unchanged (its v1 errors were small relative to the "
+           "attributions).", ""],
+        "step4_size_share": head + ["LIME size shares (ALL), v1 → v2:", "", to_markdown(ss_md), ""] + cv_lines
+        + ["For LR the v2 change leaves the normalised weights essentially unchanged: LR is linear on the log-odds scale, so its "
+           "probability slopes differ between instances mainly by the common factor p(1 − p), which the per-instance "
+           "normalisation removes.", ""],
+        "step4_direction": head + ["LIME direction counts over the 20 features (+/−/0) and the mean |Spearman ρ| "
+                                   "between raw value and weight, v1 vs v2. Although the v2 weights vary much more "
+                                   "between instances (coefficient of variation in step4_global_importance.md), they "
+                                   "still hardly correlate with the feature's own value (mean |ρ| ≤ 0.10): a local "
+                                   "slope is not a contribution, so its sign does not follow the feature value.", "",
+                                   to_markdown(pd.DataFrame(drow)), ""],
+        "step4_agreement": head + ["Mean agreement over instances (seeds 0–2), v1 vs v2 LIME:", "",
+                                   to_markdown(pd.DataFrame(arow)), ""],
+        "step4_sanity_checks": head + ["Integrated Gradients completeness, v1 vs v2:", "", to_markdown(ig_md), ""],
+        "step4_runtime": head + [f"v1 full run: {v1_info.get('wall_time_s', float('nan')) / 60:.1f} min wall. v2 run: "
+                                 f"{run_info.get('wall_time_s', float('nan')) / 60:.1f} min wall, "
+                                 f"{run_info.get('jobs_from_cache')} of {run_info.get('jobs')} jobs reused from the cache.", ""],
+    }  # fmt: skip
+    return out

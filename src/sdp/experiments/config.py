@@ -14,6 +14,7 @@ Example::
     n_trials: null                  # null = protocol default from configs/default.yaml
     persist_models: true
     n_jobs: 10
+    feature_selection: {method: autospearman, threshold: 0.7, vif_threshold: 5}   # optional
 
 Rule-based baselines always use preprocessing ``none`` and imbalance ``none``.
 """
@@ -53,6 +54,7 @@ class ExperimentConfig:
     projects: tuple[str, ...] | None = None  # restrict to these projects (smoke tests)
     description: str = ""
     extra: dict = field(default_factory=dict)
+    feature_selection: dict | None = None  # e.g. {method: autospearman, threshold: 0.7, vif_threshold: 5}
 
     def seeds_for(self, model: str) -> tuple[int, ...]:
         return self.seeds if is_learned(model) else self.baseline_seeds
@@ -103,4 +105,5 @@ def load_experiment(path: str | Path) -> ExperimentConfig:
         persist_models=bool(raw.get("persist_models", False)),
         n_jobs=int(raw.get("n_jobs", 1)),
         description=raw.get("description", ""),
+        feature_selection=raw.get("feature_selection"),
     )

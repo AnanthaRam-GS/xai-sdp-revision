@@ -42,7 +42,7 @@ from sdp.config import Config
 from sdp.data.clean import ID_COL, LABEL_COL
 from sdp.data.study import StudyDataset, build_study
 from sdp.eval.metrics import best_mcc_threshold, evaluate
-from sdp.eval.preprocess import EFFORT_COL, FEATURES, feature_frame, make_preprocessor
+from sdp.eval.preprocess import EFFORT_COL, feature_frame, make_preprocessor
 from sdp.eval.splits import Split, project_frame, time_aware_splits, within_release_splits
 from sdp.experiments.config import ExperimentConfig
 from sdp.experiments.persistence import META, artifact_dir, save_artifact
@@ -71,6 +71,7 @@ class Job:
     n_trials: int
     artifact_root: str | None = None  # <artifacts>/<experiment>, or None for no persistence
     experiment: str = ""
+    features: tuple[str, ...] | None = None  # metric subset (feature selection); None = all 20
 
     @property
     def label(self) -> str:
@@ -99,6 +100,8 @@ class Job:
             "necm": cfg.evaluation.necm_cost_ratio,
             "effort": cfg.evaluation.recall_at_loc,
         }
+        if self.features is not None:  # only then, so that earlier cache keys stay valid
+            spec["features"] = list(self.features)
         return hashlib.sha1(json.dumps(spec, sort_keys=True, default=str).encode()).hexdigest()
 
 
@@ -114,8 +117,10 @@ def execute_job(job: Job, df: pd.DataFrame, cfg: Config) -> dict:
 
     set_seed(job.seed, torch_threads=1, quiet=True)
     X = feature_frame(df)
+    if job.features is not None:
+        X = X[list(job.features)]
     y = df[LABEL_COL].to_numpy(dtype="int64")
-    loc = df[EFFORT_COL].to_numpy(dtype="float64")
+    loc = df[EFFORT_COL].to_numpy(dtype="float64")  # LOC as effort is kept even if not a model input
     names = df[ID_COL].astype(str).to_numpy()
     e = cfg.evaluation
 
@@ -165,7 +170,7 @@ def execute_job(job: Job, df: pd.DataFrame, cfg: Config) -> dict:
                 meta = base | {
                     "experiment": job.experiment, "hyperparameters": params, "threshold_val_mcc": threshold,
                     "training_time_s": fit_time, "tuning_time_s": tuning_time, "tuned_on_split": tuned_on,
-                    "inner_cv_auc": inner_auc, "feature_order": list(FEATURES), "n_fit": len(fit),
+                    "inner_cv_auc": inner_auc, "feature_order": list(X.columns), "n_fit": len(fit),
                     "n_val": len(val), "best_iteration": n_iter, "code_version": CODE_VERSION,
                 }  # fmt: skip
                 save_artifact(path, pre, model, meta)
@@ -222,15 +227,34 @@ def experiment_splits(cfg: Config, exp: ExperimentConfig, study: StudyDataset, f
     return [tuple(g) for g in groups.values()]
 
 
+def selected_features(exp: ExperimentConfig, df: pd.DataFrame, split: Split) -> tuple[str, ...] | None:
+    """Metrics chosen by the experiment's feature selection on the split's fitting rows."""
+    fs = exp.feature_selection
+    if not fs:
+        return None
+    if fs.get("method") != "autospearman":
+        raise ValueError(f"unknown feature selection {fs!r}")
+    from sdp.robustness.collinearity import autospearman
+
+    X = feature_frame(df).iloc[split.fit_idx]
+    chosen, _ = autospearman(X, float(fs.get("threshold", 0.7)), float(fs.get("vif_threshold", 5.0)))
+    return tuple(chosen)
+
+
 def build_jobs(cfg: Config, exp: ExperimentConfig, study: StudyDataset, frames) -> list[Job]:
     n_trials = exp.n_trials if exp.n_trials is not None else cfg.tuning.n_trials(exp.protocol)
     root = str(cfg.paths.artifacts_dir / "models" / exp.name) if exp.persist_models else None
     jobs = []
     for group in experiment_splits(cfg, exp, study, frames):
+        if exp.feature_selection and len(group) > 1:
+            raise ValueError("feature selection is supported for the time-aware protocol only")
+        feats = selected_features(exp, frames[group[0].project], group[0])
         for st in exp.settings:
+            if feats is not None and not is_learned(st.model):
+                raise ValueError("feature selection applies to learned models only")
             for seed in exp.seeds_for(st.model):
                 jobs.append(Job(group[0].project, group, st.model, st.preprocessing, st.imbalance, seed,
-                                n_trials if is_learned(st.model) else 0, root, exp.name))  # fmt: skip
+                                n_trials if is_learned(st.model) else 0, root, exp.name, feats))  # fmt: skip
     return sorted(jobs, key=lambda j: -j.cost())
 
 

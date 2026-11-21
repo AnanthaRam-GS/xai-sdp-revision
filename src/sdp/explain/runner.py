@@ -203,19 +203,21 @@ def build_context(job: ExplainJob, df: pd.DataFrame, settings: ExplainSettings, 
     pre, model, meta = load_artifact(Path(job.artifact_path))
     if meta["split_id"] != job.split.split_id or int(meta["seed"]) != job.seed or meta["model"] != job.model:
         raise MissingArtifactError(f"artefact {job.artifact_path} does not belong to {job.label}")
-    if list(meta["feature_order"]) != list(FEATURES):
+    feats = list(meta["feature_order"])
+    if not feats or feats != [f for f in FEATURES if f in feats]:
         raise ValueError(f"{job.label}: unexpected feature order in the artefact")
-    X = feature_frame(df)
+    X = feature_frame(df)[feats]  # all 20 metrics, or the subset the model was trained on
     y = df[LABEL_COL].to_numpy(dtype="int64")
     fit, test = job.split.fit_idx, job.split.test_idx
 
     bg_path = job.background_path(root)
     if bg_path.exists():
-        bg_raw = load_background(bg_path)[FEATURES]
+        bg_raw = load_background(bg_path)[feats]
     else:
-        X_fit = X.iloc[fit].reset_index(drop=True)
+        X_fit = feature_frame(df).iloc[fit].reset_index(drop=True)  # rows depend on labels only
         bg_raw = sample_background(X_fit, y[fit], settings.background_size, job.seed)
         save_background(bg_raw.assign(defective=y[fit][bg_raw.index]), bg_path)
+        bg_raw = bg_raw[feats]
     test_raw = X.iloc[test].reset_index(drop=True)
     return ExplainContext(
         split_id=job.split.split_id, project=job.split.project, train_release="+".join(job.split.train_releases),
@@ -285,14 +287,16 @@ def run_cached(job: ExplainJob, df: pd.DataFrame, settings: ExplainSettings, roo
 
 
 def stored_predictions(cfg: Config, settings: ExplainSettings) -> dict[tuple, np.ndarray]:
-    """Step 3 test predictions per (split_id, model, seed), in test-index order."""
+    """Step 3 test predictions per (split_id, model, seed) for the configured
+    preprocessing of each model, in test-index order."""
     path = Path(cfg.paths.results_dir) / settings.experiment / "predictions.csv"
     if not path.exists():
         logger.warning("No stored predictions at %s; skipping the reproduction check.", path)
         return {}
-    pred = pd.read_csv(path, usecols=["split_id", "model", "seed", "y_prob"])
-    pred = pred[pred["model"].isin(list(settings.models))]
-    return {k: g["y_prob"].to_numpy() for k, g in pred.groupby(["split_id", "model", "seed"], sort=False)}
+    pred = pd.read_csv(path, usecols=["split_id", "model", "preprocessing", "seed", "y_prob"])
+    pred = pred[[(m, p) in set(settings.models.items()) for m, p in zip(pred["model"], pred["preprocessing"])]]
+    keys = ["split_id", "model", "seed"]
+    return {k: g["y_prob"].to_numpy() for k, g in pred.groupby(keys, sort=False)}
 
 
 def run_explanations(cfg: Config, settings: ExplainSettings, jobs: list[ExplainJob], frames: dict,
